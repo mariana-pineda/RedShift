@@ -1,22 +1,22 @@
 
 CREATE TABLE Orders (
-    OrderID INT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1), 
-    CustomerID STRING NULL, 
-    EmployeeID INT NULL, 
-    OrderDate TIMESTAMP NULL, 
-    RequiredDate TIMESTAMP NULL, 
-    ShippedDate TIMESTAMP NULL, 
-    ShipVia INT NULL, 
-    Freight DECIMAL(19, 4) NULL DEFAULT 0, 
-    ShipName STRING NULL, 
-    ShipAddress STRING NULL, 
-    ShipCity STRING NULL, 
-    ShipRegion STRING NULL, 
-    ShipPostalCode STRING NULL, 
-    ShipCountry STRING NULL, 
+    OrderID INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1), 
+    CustomerID STRING(5), 
+    EmployeeID INTEGER, 
+    OrderDate TIMESTAMP, 
+    RequiredDate TIMESTAMP, 
+    ShippedDate TIMESTAMP, 
+    ShipVia INTEGER, 
+    Freight DECIMAL(19, 4) DEFAULT 0, 
+    ShipName STRING(40), 
+    ShipAddress STRING(60), 
+    ShipCity STRING(15), 
+    ShipRegion STRING(15), 
+    ShipPostalCode STRING(10), 
+    ShipCountry STRING(15),
     PRIMARY KEY (OrderID)
 );
 
-ALTER TABLE Orders ADD CONSTRAINT FK_Orders_Customers FOREIGN KEY(CustomerID) REFERENCES Customers(CustomerID);
-ALTER TABLE Orders ADD CONSTRAINT FK_Orders_Employees FOREIGN KEY(EmployeeID) REFERENCES Employees(EmployeeID);
-ALTER TABLE Orders ADD CONSTRAINT FK_Orders_Shippers FOREIGN KEY(ShipVia) REFERENCES Shippers(ShipperID);
+ALTER TABLE Orders ADD CONSTRAINT FK_Orders_Customers FOREIGN KEY (CustomerID) REFERENCES Customers (CustomerID);
+ALTER TABLE Orders ADD CONSTRAINT FK_Orders_Employees FOREIGN KEY (EmployeeID) REFERENCES Employees (EmployeeID);
+ALTER TABLE Orders ADD CONSTRAINT FK_Orders_Shippers FOREIGN KEY (ShipVia) REFERENCES Shippers (ShipperID);
