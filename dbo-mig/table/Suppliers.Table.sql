@@ -1,16 +1,16 @@
 
 CREATE TABLE Suppliers (
-  SupplierID INT NOT NULL GENERATED ALWAYS AS IDENTITY, 
-  CompanyName STRING NOT NULL, 
-  ContactName STRING, 
-  ContactTitle STRING, 
-  Address STRING, 
-  City STRING, 
-  Region STRING, 
-  PostalCode STRING, 
-  Country STRING, 
-  Phone STRING, 
-  Fax STRING, 
-  HomePage STRING, 
-  CONSTRAINT PK_Suppliers PRIMARY KEY (SupplierID)
+  SupplierID INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY,
+  CompanyName NVARCHAR(40) NOT NULL,
+  ContactName NVARCHAR(30),
+  ContactTitle NVARCHAR(30),
+  Address NVARCHAR(60),
+  City NVARCHAR(15),
+  Region NVARCHAR(15),
+  PostalCode NVARCHAR(10),
+  Country NVARCHAR(15),
+  Phone NVARCHAR(24),
+  Fax NVARCHAR(24),
+  HomePage STRING,
+  PRIMARY KEY (SupplierID)
 );
