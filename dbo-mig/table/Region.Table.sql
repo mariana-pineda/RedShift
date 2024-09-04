@@ -1,6 +1,7 @@
 
 CREATE TABLE Region (
-  RegionID INT NOT NULL,
-  RegionDescription STRING NOT NULL,
-  PRIMARY KEY (RegionID)
+	RegionID INT NOT NULL, 
+	RegionDescription STRING NOT NULL 
 )
+USING delta
+OPTIONS ('primaryKey'='RegionID')
