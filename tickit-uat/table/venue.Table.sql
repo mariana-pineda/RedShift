@@ -1,9 +1,9 @@
 
 CREATE TABLE tickit.venue (
-	venueid SMALLINT NOT NULL, 
-	venuename VARCHAR(100), 
-	venuecity VARCHAR(30), 
-	venuestate CHAR(2), 
-	venueseats INTEGER
-) DISTSTYLE KEY DISTKEY (venueid) SORTKEY (venueid)
-
+	venueid SMALLINT,
+	venuename STRING,
+	venuecity STRING,
+	venuestate STRING,
+	venueseats INT,
+	PRIMARY KEY (venueid)
+) USING DELTA;
