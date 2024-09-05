@@ -1,10 +1,9 @@
 
 CREATE TABLE tickit.event (
-	eventid INTEGER NOT NULL, 
-	venueid SMALLINT NOT NULL, 
-	catid SMALLINT NOT NULL, 
-	dateid SMALLINT NOT NULL, 
-	eventname VARCHAR(200), 
-	starttime TIMESTAMP WITHOUT TIME ZONE
-) DISTSTYLE KEY DISTKEY (eventid) SORTKEY (dateid)
-
+    eventid INTEGER NOT NULL PRIMARY KEY, 
+    venueid SMALLINT NOT NULL, 
+    catid SMALLINT NOT NULL, 
+    dateid SMALLINT NOT NULL, 
+    eventname STRING, 
+    starttime TIMESTAMP
+) USING DELTA
