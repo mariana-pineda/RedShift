@@ -1,4 +1,3 @@
-
 CREATE TABLE tickit.date (
 	dateid SMALLINT NOT NULL, 
 	caldate DATE NOT NULL, 
@@ -7,6 +6,8 @@ CREATE TABLE tickit.date (
 	month CHAR(5) NOT NULL, 
 	qtr CHAR(5) NOT NULL, 
 	year SMALLINT NOT NULL, 
-	holiday BOOLEAN DEFAULT false
-) DISTSTYLE KEY DISTKEY (dateid) SORTKEY (dateid)
-
+	holiday BOOLEAN DEFAULT false,
+	PRIMARY KEY (dateid)
+) USING DELTA
+PARTITIONED BY (dateid)
+TBLPROPERTIES ('delta.autoOptimize.optimizeWrite' = true, 'delta.autoOptimize.autoCompact' = true)
