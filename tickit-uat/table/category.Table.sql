@@ -1,8 +1,7 @@
-
 CREATE TABLE tickit.category (
-	catid SMALLINT NOT NULL, 
-	catgroup VARCHAR(10), 
-	catname VARCHAR(10), 
-	catdesc VARCHAR(50)
-) DISTSTYLE KEY DISTKEY (catid) SORTKEY (catid)
-
+  catid SMALLINT NOT NULL,
+  catgroup STRING,
+  catname STRING,
+  catdesc STRING,
+  PRIMARY KEY (catid)
+) USING DELTA
