@@ -7,8 +7,9 @@ CREATE TABLE tickit.sales (
 	eventid INTEGER NOT NULL, 
 	dateid SMALLINT NOT NULL, 
 	qtysold SMALLINT NOT NULL, 
-	pricepaid NUMERIC(8, 2), 
-	commission NUMERIC(8, 2), 
-	saletime TIMESTAMP WITHOUT TIME ZONE
-) DISTSTYLE KEY DISTKEY (listid) SORTKEY (dateid)
+	pricepaid DECIMAL(8, 2), 
+	commission DECIMAL(8, 2), 
+	saletime TIMESTAMP
+) USING DELTA
+PARTITIONED BY (listid)
 
