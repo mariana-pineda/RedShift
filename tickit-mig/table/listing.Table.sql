@@ -8,8 +8,8 @@ CREATE TABLE tickit.listing (
   priceperticket DECIMAL(8, 2), 
   totalprice DECIMAL(8, 2), 
   listtime TIMESTAMP
-)
-USING DELTA
+) USING DELTA 
 OPTIONS (
-  partitioned_by = ARRAY('dateid')
-);
+  PRIMARY KEY (listid)
+)
+
