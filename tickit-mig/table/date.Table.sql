@@ -8,6 +8,7 @@ CREATE TABLE tickit.date (
     qtr STRING NOT NULL, 
     year SMALLINT NOT NULL, 
     holiday BOOLEAN DEFAULT false
-) USING DELTA
-CLUSTERED BY (dateid) 
-TBLPROPERTIES ('delta.autoOptimize.optimizeWrite' = 'true', 'delta.autoOptimize.autoCompact' = 'true');
+)
+USING DELTA
+OPTIONS (path '/mnt/tickit/date')
+
