@@ -4,6 +4,8 @@ CREATE TABLE tickit.venue (
     venuename STRING, 
     venuecity STRING, 
     venuestate STRING, 
-    venueseats INT,
-    PRIMARY KEY (venueid)
-) USING DELTA
+    venueseats INT
+);
+
+ALTER TABLE tickit.venue
+ADD CONSTRAINT pk_venue PRIMARY KEY (venueid);
