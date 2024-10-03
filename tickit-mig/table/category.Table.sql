@@ -5,4 +5,4 @@ CREATE TABLE tickit.category (
     catname STRING,
     catdesc STRING,
     PRIMARY KEY (catid)
-) USING DELTA;
+) USING DELTA
