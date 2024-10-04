@@ -1,8 +1,11 @@
 
 CREATE TABLE tickit.category (
-    catid SMALLINT NOT NULL,
-    catgroup STRING,
-    catname STRING,
-    catdesc STRING,
-    PRIMARY KEY (catid)
+  catid SMALLINT NOT NULL,
+  catgroup STRING,
+  catname STRING,
+  catdesc STRING,
+  PRIMARY KEY (catid)
 ) USING DELTA
+OPTIONS (
+  PARTITIONED BY (catid)
+);
