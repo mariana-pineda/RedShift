@@ -8,8 +8,8 @@ CREATE TABLE tickit.listing (
     priceperticket DECIMAL(8, 2), 
     totalprice DECIMAL(8, 2), 
     listtime TIMESTAMP
-) 
-USING DELTA;
-
--- Note: Primary key, distribution, and sort key options need to be handled 
--- outside CREATE TABLE in Databricks, as they are not directly supported.
+) USING DELTA
+OPTIONS (
+    'primaryKey' = 'listid',
+    'partitionBy' = 'dateid'
+)
