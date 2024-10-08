@@ -13,4 +13,4 @@ CREATE TABLE tickit.sales (
 )
 USING DELTA
 PARTITIONED BY (listid)
-TBLPROPERTIES ('delta.sort.columns' = 'dateid');
+
