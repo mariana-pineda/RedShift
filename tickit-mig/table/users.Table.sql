@@ -17,7 +17,6 @@ CREATE TABLE tickit.users (
   likerock BOOLEAN, 
   likevegas BOOLEAN, 
   likebroadway BOOLEAN, 
-  likemusicals BOOLEAN,
-  PRIMARY KEY (userid)
-) USING DELTA
-
+  likemusicals BOOLEAN
+)
+USING DELTA;
