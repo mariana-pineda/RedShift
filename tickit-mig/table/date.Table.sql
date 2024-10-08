@@ -8,4 +8,4 @@ CREATE TABLE tickit.date (
     qtr STRING NOT NULL, 
     year SMALLINT NOT NULL, 
     holiday BOOLEAN DEFAULT false
-) USING DELTA;
+);
