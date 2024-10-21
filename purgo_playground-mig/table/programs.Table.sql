@@ -5,4 +5,7 @@ CREATE TABLE purgo_playground.programs (
   country_code STRING NOT NULL, 
   program_start_date TIMESTAMP
 )
-USING DELTA;
+USING DELTA
+OPTIONS (
+  path = 'dbfs:/path/to/purgo_playground/programs'
+);
