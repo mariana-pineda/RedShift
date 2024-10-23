@@ -20,4 +20,4 @@ CREATE TABLE purgo_playground.f_order (
   cancel_qty DOUBLE, 
   crt_dt TIMESTAMP, 
   updt_dt TIMESTAMP
-);
+)
