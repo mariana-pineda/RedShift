@@ -1,61 +1,61 @@
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 
-# Predefined categories for categoryGroup
-category_options = ["VIP", "Regular", "New", "Uncategorized"]
+# Test data generation for qa.employees with lastdate column
 
-# Generate test data for employees table
-employees_data = []
-for i in range(20):
-    employee = {
-        "EmployeeID": i + 1,
-        "LastName": f"LastName{i+1}",
-        "FirstName": f"FirstName{i+1}",
+# Function to generate random date
+def random_date():
+    return datetime.now().strftime('%Y-%m-%d')
+
+# Employee data records with lastdate added
+employees_data = [
+    {
+        "EmployeeID": i,
+        "LastName": f"LastName{i}",
+        "FirstName": f"FirstName{i}",
         "Title": "Title",
         "TitleOfCourtesy": "Mr.",
-        "BirthDate": datetime.now() - timedelta(days=random.randint(7000, 20000)),
-        "HireDate": datetime.now() - timedelta(days=random.randint(1000, 7000)),
-        "Address": f"Address {i+1}",
+        "BirthDate": "1970-01-01 00:00:00",
+        "HireDate": "2000-01-01 00:00:00",
+        "Address": f"Address{i}",
         "City": "City",
         "Region": "Region",
-        "PostalCode": f"{10000 + i}",
+        "PostalCode": "12345",
         "Country": "Country",
-        "HomePhone": f"(555) 000-{1000 + i}",
-        "Extension": f"{100 + i}",
+        "HomePhone": "123-456-7890",
+        "Extension": "1234",
         "Photo": None,
         "Notes": "Notes",
-        "ReportsTo": random.randint(1, 10),
-        "PhotoPath": "Path",
-        # Validate lastdate is of date type and default value is current date
-        "lastdate": datetime.now().date()  # Default to current date
+        "ReportsTo": 1,
+        "PhotoPath": "/path/to/photo",
+        # Validating lastdate default value as current date
+        "LastDate": random_date()
     }
-    employees_data.append(employee)
+    for i in range(20)
+]
 
-# Generate test data for customers table
-customers_data = []
-for i in range(30):
-    customer = {
-        "CustomerID": i + 1,
-        "CompanyName": f"CompanyName{i+1}",
-        "ContactName": f"ContactName{i+1}",
-        "ContactTitle": "ContactTitle",
-        "Address": f"Address {i+1}",
-        "City": "City",
-        "Region": "Region",
-        "PostalCode": f"{10000 + i}",
+# Test data generation for qa.customers with categoryGroup column
+
+# Predefined categories
+categories = ["VIP", "Regular", "New", "Uncategorized"]
+
+# Function to generate random category
+def random_category():
+    return random.choice(["VIP", "Regular", "New"])
+
+# Customer data records with categoryGroup added
+customers_data = [
+    {
+        "CustomerID": i,
+        "CustomerName": f"CustomerName{i}",
+        "ContactName": f"ContactName{i}",
         "Country": "Country",
-        "Phone": f"(555) 000-{1000 + i}",
-        "Fax": f"(555) 000-{2000 + i}",
-        # Validate categoryGroup is a string type with predefined categories
-        "categoryGroup": random.choice(category_options)  # Ensure it only contains valid categories
+        # Validating predefined categories and default Uncategorized
+        "CategoryGroup": random_category() if i < 15 else "Uncategorized"
     }
-    customers_data.append(customer)
+    for i in range(30)
+]
 
-# Output the generated data (for verification, not part of the generation code)
-print("Employees Data:")
-for emp in employees_data:
-    print(emp)
-
-print("\nCustomers Data:")
-for cust in customers_data:
-    print(cust)
+# Print generated test data
+print(employees_data)
+print(customers_data)
