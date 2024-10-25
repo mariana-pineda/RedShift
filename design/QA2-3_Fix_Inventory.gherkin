@@ -1,16 +1,33 @@
-Feature: Modify Database Schema
+Feature: Update database schema for employees and customers tables
 
-  Scenario: Add lastdate to employees table
-    Given the database schema is up to date
-    When I add a "lastdate" column to the "employees" table
-    Then the "lastdate" column should be of date type
-    And the default value should be set to the current date
-    And all existing employee records should have the default "lastdate"
+  Background:
+    Given the following existing table structure for employees:
+      | Column         | Data Type |
+      | EmployeeID     | int       |
+      | LastName       | string    |
+      | FirstName      | string    |
+      | Title          | string    |
+      | TitleOfCourtesy| string    |
+      | BirthDate      | timestamp |
+      | HireDate       | timestamp |
+      | Address        | string    |
+      | City           | string    |
+      | Region         | string    |
+      | PostalCode     | string    |
+      | Country        | string    |
+      | HomePhone      | string    |
+      | Extension      | string    |
+      | Photo          | binary    |
+      | Notes          | string    |
+      | ReportsTo      | int       |
+      | PhotoPath      | string    |
 
-  Scenario: Add categoryGroup to customers table
-    Given the database schema is up to date
-    When I add a "categoryGroup" column to the "customers" table
-    Then the "categoryGroup" column should be of string type
-    And it should accept predefined categories such as "VIP", "Regular", "New"
-    And a validation should ensure it only contains valid categories
-    And all existing customer records should have "Uncategorized" as the default value
+  Scenario: Add lastdate column to employees table
+    Given a column "lastdate" of type "date"
+    When the "lastdate" column is added to the "qa.employees" table
+    Then the "qa.employees" table should include the "lastdate" column with type "date"
+
+  Scenario: Add categoryGroup column to customers table
+    Given a column "categoryGroup" of type "string"
+    When the "categoryGroup" column is added to the "qa.customers" table
+    Then the "qa.customers" table should include the "categoryGroup" column with type "string"
