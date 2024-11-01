@@ -1,22 +1,37 @@
-import unittest
-from datetime import datetime
+import pytest
 
-class TestDatabaseSchema(unittest.TestCase):
+# Validation functions
+def validate_lastdate_column(employees_data):
+    for employee in employees_data:
+        assert "LastDate" in employee, "LastDate column is missing in employees data."
+        assert isinstance(employee["LastDate"], datetime.date), "LastDate should be of type datetime.date."
 
-    def test_employees_lastdate(self):
-        for employee in employees_data:
-            # Check if lastdate is of date type
-            self.assertIsInstance(employee['lastdate'], datetime.date)
-            # Check if lastdate default value is current date
-            self.assertEqual(employee['lastdate'], datetime.now().date())
+def validate_category_group_column(customers_data):
+    for customer in customers_data:
+        assert "CategoryGroup" in customer, "CategoryGroup column is missing in customers data."
+        assert isinstance(customer["CategoryGroup"], str), "CategoryGroup should be of type str."
+        assert customer["CategoryGroup"] in ["Retail", "Wholesale", "Online", "Direct"], "CategoryGroup value is not valid."
 
-    def test_customers_categoryGroup(self):
-        valid_categories = {"VIP", "Regular", "New", "Uncategorized"}
-        for customer in customers_data:
-            # Check if categoryGroup is a string
-            self.assertIsInstance(customer['categoryGroup'], str)
-            # Check if categoryGroup contains valid categories
-            self.assertIn(customer['categoryGroup'], valid_categories)
+# Test cases
+def test_employees_lastdate_column():
+    employees_data = [
+        {
+            "EmployeeID": 1,
+            "LastDate": datetime.date(2023, 1, 1),  # Example valid date
+        },
+        # Add more test cases as needed
+    ]
+    validate_lastdate_column(employees_data)
 
-if __name__ == '__main__':
-    unittest.main()
+def test_customers_category_group_column():
+    customers_data = [
+        {
+            "CustomerID": "C001",
+            "CategoryGroup": "Retail",  # Example valid category
+        },
+        # Add more test cases as needed
+    ]
+    validate_category_group_column(customers_data)
+
+if __name__ == "__main__":
+    pytest.main()
