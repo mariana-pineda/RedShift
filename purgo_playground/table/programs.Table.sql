@@ -1,8 +1,9 @@
 
 CREATE TABLE purgo_playground.programs (
-	program_id INTEGER NOT NULL, 
-	program_name VARCHAR(256) NOT NULL, 
-	country_code VARCHAR(10) NOT NULL, 
-	program_start_date TIMESTAMP WITHOUT TIME ZONE
+  program_id INT NOT NULL, 
+  program_name STRING NOT NULL, 
+  country_code STRING NOT NULL, 
+  program_start_date TIMESTAMP
 )
-
+USING DELTA
+TBLPROPERTIES ('primaryKey' = 'program_id');
