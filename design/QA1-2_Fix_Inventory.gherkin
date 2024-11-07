@@ -1,13 +1,19 @@
-Feature: Modify database tables to add new columns
+Feature: Update Database Schema for Employees and Customers
 
-  Scenario: Add lastdate column to employees table
-    Given the qa.employees table exists with defined columns
-    When I add a new column "lastdate" to the employees table
-    Then the "lastdate" column should be of data type timestamp
-    And "lastdate" should represent the last working day of the employee
+  Background:
+    Given a database with an existing "employees" table
+    And a database with an existing "customers" table
 
-  Scenario: Add categoryGroup column to customers table
-    Given the qa.customers table exists
-    When I add a new column "categoryGroup" to the customers table
-    Then the "categoryGroup" column should be of data type string
-    And "categoryGroup" should represent the grouping category of the customer
+  Scenario: Add "lastdate" to employees table
+    Given I want to track the last interaction date for each employee
+    When I add a new column "lastdate" to the "employees" table
+    Then the "lastdate" column should be of date type
+    And it should have a default value of the current date
+    And existing employee data should not be affected
+
+  Scenario: Add "categoryGroup" to customers table
+    Given I want to categorize customers based on specific groups
+    When I add a new column "categoryGroup" to the "customers" table
+    Then the "categoryGroup" column should be of string type
+    And it should accept values like "Premium", "Standard", "Basic"
+    And existing customer data should not be affected
