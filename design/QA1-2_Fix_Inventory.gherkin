@@ -1,19 +1,34 @@
-Feature: Update Database Schema for Employees and Customers
+Feature: Add lastdate and categoryGroup columns to respective tables
 
   Background:
-    Given a database with an existing "employees" table
-    And a database with an existing "customers" table
+    Given the existing database schema
 
-  Scenario: Add "lastdate" to employees table
-    Given I want to track the last interaction date for each employee
-    When I add a new column "lastdate" to the "employees" table
-    Then the "lastdate" column should be of date type
-    And it should have a default value of the current date
-    And existing employee data should not be affected
+  Scenario: Add lastdate column to employees table
+    Given the employees table "qa.employees" exists with the following columns:
+      | EmployeeID       | int      |
+      | LastName         | string   |
+      | FirstName        | string   |
+      | Title            | string   |
+      | TitleOfCourtesy  | string   |
+      | BirthDate        | timestamp|
+      | HireDate         | timestamp|
+      | Address          | string   |
+      | City             | string   |
+      | Region           | string   |
+      | PostalCode       | string   |
+      | Country          | string   |
+      | HomePhone        | string   |
+      | Extension        | string   |
+      | Photo            | binary   |
+      | Notes            | string   |
+      | ReportsTo        | int      |
+      | PhotoPath        | string   |
+    When a new column "lastdate" is added to the "qa.employees" table
+    Then the "lastdate" column should be of type "timestamp"
+    And the "lastdate" column should be nullable
 
-  Scenario: Add "categoryGroup" to customers table
-    Given I want to categorize customers based on specific groups
-    When I add a new column "categoryGroup" to the "customers" table
-    Then the "categoryGroup" column should be of string type
-    And it should accept values like "Premium", "Standard", "Basic"
-    And existing customer data should not be affected
+  Scenario: Add categoryGroup column to customers table
+    Given the customers table "qa.customers" exists
+    When a new column "categoryGroup" is added to the "qa.customers" table
+    Then the "categoryGroup" column should be of type "string"
+    And the "categoryGroup" column should be nullable
