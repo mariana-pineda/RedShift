@@ -1,39 +1,19 @@
-Feature: Modify database schema
+Feature: Update Employees and Customers Tables
 
   Background:
-    Given the existing "employees" table in the qa database
-    And the existing "customers" table in the qa database
+    Given a database schema with the following tables
+      | Table      | Columns                                                                                                                                                     |
+      | qa.employees | EmployeeID, LastName, FirstName, Title, TitleOfCourtesy, BirthDate, HireDate, Address, City, Region, PostalCode, Country, HomePhone, Extension, Photo, Notes, ReportsTo, PhotoPath |
+      | qa.customers | CustomerID, CompanyName, ContactName, ContactTitle, Address, City, Region, PostalCode, Country, Phone, Fax                                                |
 
-  Scenario: Add "lastdate" column to employees table
-    Given the "employees" table has the following columns:
-      | ColumnName       | DataType  |
-      | EmployeeID       | int       |
-      | LastName         | string    |
-      | FirstName        | string    |
-      | Title            | string    |
-      | TitleOfCourtesy  | string    |
-      | BirthDate        | timestamp |
-      | HireDate         | timestamp |
-      | Address          | string    |
-      | City             | string    |
-      | Region           | string    |
-      | PostalCode       | string    |
-      | Country          | string    |
-      | HomePhone        | string    |
-      | Extension        | string    |
-      | Photo            | binary    |
-      | Notes            | string    |
-      | ReportsTo        | int       |
-      | PhotoPath        | string    |
-    When I add a column "lastdate" of type "timestamp" to the "employees" table
-    Then the "employees" table should have a new column:
-      | ColumnName | DataType  |
-      | lastdate   | timestamp |
+  Scenario: Add lastdate to employees table
+    Given I have access to the qa.employees table
+    When I add a column "lastdate" of type "timestamp" with constraints "nullable"
+    Then the qa.employees table should include the "lastdate" column
+    And "lastdate" represents the last working day of the employee
 
-  Scenario: Add "categoryGroup" column to customers table
-    Given the "customers" table exists
-    When I add a column "categoryGroup" of type "string" to the "customers" table
-    Then the "customers" table should have a new column:
-      | ColumnName   | DataType |
-      | categoryGroup| string   |
-
+  Scenario: Add categoryGroup to customers table
+    Given I have access to the qa.customers table
+    When I add a column "categoryGroup" of type "string" with constraints "nullable"
+    Then the qa.customers table should include the "categoryGroup" column
+    And "categoryGroup" represents customer segmentation for the loyalty program
