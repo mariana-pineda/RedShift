@@ -4,3 +4,4 @@ CREATE TABLE purgo_playground.countries (
   country_code STRING NOT NULL
 )
 USING DELTA
+
