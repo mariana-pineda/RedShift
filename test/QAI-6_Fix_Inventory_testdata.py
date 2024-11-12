@@ -1,69 +1,68 @@
 import random
-from datetime import datetime, timedelta
+import datetime
 import string
 
-# Generate random date within the past 10 years
-def random_date():
-    start_date = datetime.now() - timedelta(days=365*10)
-    end_date = datetime.now()
-    return start_date + (end_date - start_date) * random.random()
+# Generate random date between two dates
+def random_date(start, end):
+    return start + datetime.timedelta(days=random.randint(0, (end - start).days))
 
-# Generate random string
-def random_string(length=10):
+# Generate random string of fixed length
+def random_string(length):
     letters = string.ascii_letters
     return ''.join(random.choice(letters) for i in range(length))
 
-# Test data for qa.employees table
-employees_test_data = []
-for _ in range(25):  # Generate 25 records
+# Test data generation for qa.employees table
+employees_data = []
+for i in range(25):
     employee = {
-        "EmployeeID": random.randint(1, 1000),
-        "LastName": random_string(5),
-        "FirstName": random_string(5),
+        "EmployeeID": i + 1,
+        "LastName": random_string(8),
+        "FirstName": random_string(6),
         "Title": random_string(10),
         "TitleOfCourtesy": random.choice(["Mr.", "Ms.", "Mrs.", "Dr."]),
-        "BirthDate": random_date(),
-        "HireDate": random_date(),
+        "BirthDate": random_date(datetime.date(1960, 1, 1), datetime.date(2000, 12, 31)),
+        "HireDate": random_date(datetime.date(1990, 1, 1), datetime.date(2020, 12, 31)),
         "Address": random_string(15),
-        "City": random_string(7),
+        "City": random_string(10),
         "Region": random_string(5),
-        "PostalCode": random_string(6),
-        "Country": random_string(7),
-        "HomePhone": f"{random.randint(100,999)}-{random.randint(100,999)}-{random.randint(1000,9999)}",
-        "Extension": random_string(4),
-        "Photo": b'\x00\x01',
+        "PostalCode": ''.join(random.choices(string.digits, k=5)),
+        "Country": random.choice(["USA", "Canada", "UK", "Australia"]),
+        "HomePhone": ''.join(random.choices(string.digits, k=10)),
+        "Extension": ''.join(random.choices(string.digits, k=4)),
+        "Photo": b'\x00\x01',  # Placeholder binary data
         "Notes": random_string(20),
-        "ReportsTo": random.randint(1, 100),
-        "PhotoPath": random_string(15),
-        "lastdate": random_date() if random.choice([True, False]) else None  # Test nullable constraint
+        "ReportsTo": random.randint(1, 5),
+        "PhotoPath": f"/images/{random_string(5)}.jpg",
+        # lastdate is nullable, so it can be None
+        "lastdate": random.choice([random_date(datetime.date(2020, 1, 1), datetime.date(2023, 10, 1)), None])
     }
-    employees_test_data.append(employee)
+    employees_data.append(employee)
 
-# Test data for qa.customers table
-customers_test_data = []
-category_groups = ["Bronze", "Silver", "Gold", "Platinum"]
-for _ in range(25):  # Generate 25 records
+# Test data generation for qa.customers table
+customers_data = []
+for i in range(25):
     customer = {
-        "CustomerID": random.randint(1, 1000),
-        "CompanyName": random_string(10),
-        "ContactName": random_string(8),
-        "ContactTitle": random_string(10),
+        "CustomerID": i + 1,
+        "CompanyName": random_string(12),
+        "ContactName": random_string(10),
+        "ContactTitle": random_string(8),
         "Address": random_string(15),
-        "City": random_string(7),
+        "City": random_string(10),
         "Region": random_string(5),
-        "PostalCode": random_string(6),
-        "Country": random_string(7),
-        "Phone": f"{random.randint(100,999)}-{random.randint(100,999)}-{random.randint(1000,9999)}",
-        "Fax": f"{random.randint(100,999)}-{random.randint(100,999)}-{random.randint(1000,9999)}",
-        "categoryGroup": random.choice(category_groups) if random.choice([True, False]) else None  # Test nullable constraint
+        "PostalCode": ''.join(random.choices(string.digits, k=5)),
+        "Country": random.choice(["USA", "Canada", "UK", "Australia"]),
+        "Phone": ''.join(random.choices(string.digits, k=10)),
+        "Fax": ''.join(random.choices(string.digits, k=10)),
+        # categoryGroup is nullable, so it can be None
+        "categoryGroup": random.choice(["Gold", "Silver", "Bronze", None])
     }
-    customers_test_data.append(customer)
+    customers_data.append(customer)
 
-# Print the generated test data
+# Output the generated test data
 print("Employees Test Data:")
-for data in employees_test_data:
-    print(data)
+for employee in employees_data:
+    print(employee)
 
 print("\nCustomers Test Data:")
-for data in customers_test_data:
-    print(data)
+for customer in customers_data:
+    print(customer)
