@@ -7,3 +7,5 @@ CREATE TABLE purgo_playground.abc1234_1 (
   site_status STRING, 
   primary_investigator_source_id STRING
 )
+USING DELTA
+
