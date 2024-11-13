@@ -1,5 +1,5 @@
 
-CREATE OR REPLACE VIEW `Products by Catery` AS
+CREATE VIEW `Products by Catery` AS
 SELECT 
   Cateries.CateryName, 
   Products.ProductName, 
