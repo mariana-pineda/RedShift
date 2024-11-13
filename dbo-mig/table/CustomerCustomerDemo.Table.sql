@@ -1,7 +1,7 @@
 
 CREATE TABLE CustomerCustomerDemo (
-	CustomerID STRING NOT NULL, 
-	CustomerTypeID STRING NOT NULL
+  CustomerID STRING NOT NULL, 
+  CustomerTypeID STRING NOT NULL
 );
 
 ALTER TABLE CustomerCustomerDemo
