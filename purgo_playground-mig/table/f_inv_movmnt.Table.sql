@@ -18,5 +18,3 @@ CREATE TABLE purgo_playground.f_inv_movmnt (
   crt_dt TIMESTAMP, 
   updt_dt TIMESTAMP
 )
-USING DELTA
-
