@@ -4,4 +4,3 @@ CREATE TABLE purgo_playground.enrollments (
   program_id INT NOT NULL,
   enrollment_date TIMESTAMP
 )
-USING DELTA;
