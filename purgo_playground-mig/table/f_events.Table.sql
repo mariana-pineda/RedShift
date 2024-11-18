@@ -28,3 +28,4 @@ CREATE TABLE purgo_playground.f_events (
     content_name STRING, 
     engagement_time BIGINT
 )
+
