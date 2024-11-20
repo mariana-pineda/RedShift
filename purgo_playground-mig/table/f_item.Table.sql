@@ -12,4 +12,4 @@ CREATE TABLE purgo_playground.f_item (
   package_nbr STRING, 
   crt_dt TIMESTAMP, 
   updt_dt TIMESTAMP
-)
+);
