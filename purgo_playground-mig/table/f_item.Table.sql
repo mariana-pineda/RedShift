@@ -1,7 +1,7 @@
 
 CREATE TABLE purgo_playground.f_item (
   item_nbr STRING, 
-  item_vb BIGINT, 
+  item_vb LONG, 
   delivery_dt DECIMAL(38, 0), 
   item_inv_type STRING, 
   txn_nbr STRING, 
