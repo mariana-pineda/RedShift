@@ -4,9 +4,9 @@ CREATE TABLE purgo_playground.f_events (
 	event_name STRING, 
 	event_ts STRING, 
 	user_pseudo_id STRING, 
-	event_bundle_sequence_id LONG, 
-	session_id LONG, 
-	session_number LONG, 
+	event_bundle_sequence_id BIGINT, 
+	session_id BIGINT, 
+	session_number BIGINT, 
 	device_browser STRING, 
 	device_category STRING, 
 	city STRING, 
@@ -26,5 +26,7 @@ CREATE TABLE purgo_playground.f_events (
 	navigation_item_type STRING, 
 	navigation_item_name STRING, 
 	content_name STRING, 
-	engagement_time LONG
-) USING DELTA;
+	engagement_time BIGINT
+)
+USING DELTA
+
