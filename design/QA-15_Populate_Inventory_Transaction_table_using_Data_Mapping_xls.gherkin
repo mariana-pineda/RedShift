@@ -1,0 +1,22 @@
+Feature: Inventory Transaction Table Logic
+
+  Scenario: Generating SQL Logic for Inventory Transaction Table
+
+    Given a detailed mapping of each field in the target table from the attached Excel file
+    When I develop SQL-based logic for populating the Inventory Transaction table (f_inv_movmnt)
+    Then the SQL logic should populate the table based on the mappings provided
+
+  Scenario Outline: Field Mapping from Source Tables
+
+    Given the field mapping for <FieldName> from <SourceTable>
+    When I implement the SQL logic for populating the f_inv_movmnt table with <FieldName>
+    Then the resulting data should correctly reflect the mapping and data requirements
+    
+    Examples: 
+      | FieldName            | SourceTable |
+      | TransactionID        | TableA      |
+      | ItemCode             | TableB      |
+      | QuantityReceived     | TableC      |
+      | DateReceived         | TableD      |
+      | SupplierName         | TableE      |
+
