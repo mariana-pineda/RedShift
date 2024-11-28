@@ -1,31 +1,27 @@
 import pandas as pd
 import numpy as np
 
-# Generating test data for the email dataset
-# This will create a DataFrame with 30 records to test every condition
+# Generate random test data
+np.random.seed(42)  # For reproducibility
+num_records = 30
 
-# Function to generate random boolean values
-def random_bool():
-    return np.random.choice([True, False])
-
-# Creating the initial dataset with IS_CLICKED and IS_OPENED columns
-np.random.seed(0)  # For reproducibility
+# Create a DataFrame with 'IS_CLICKED' and 'IS_OPENED' columns
 data = {
-    "IS_CLICKED": [random_bool() for _ in range(30)],
-    "IS_OPENED": [random_bool() for _ in range(30)]
+    'IS_CLICKED': np.random.choice([True, False], num_records),
+    'IS_OPENED': np.random.choice([True, False], num_records)
 }
 
 df = pd.DataFrame(data)
 
-# Adding the NOT_OPENED_EMAIL column based on conditions
-# Condition 1: IS_CLICKED is True and IS_OPENED is False
-df["NOT_OPENED_EMAIL"] = df.apply(
-    lambda row: True if row["IS_CLICKED"] and not row["IS_OPENED"] else False, axis=1
-)
+# Scenario: Add NOT_OPENED_EMAIL column for emails that have been clicked but not opened
+df['NOT_OPENED_EMAIL'] = np.where((df['IS_CLICKED'] == True) & (df['IS_OPENED'] == False), True, False)
+# Explanation: Marks email as not opened when it is clicked but not opened
 
-# Adding the timestep column to the dataset.
-# Assuming timestep is a sequential number for simplicity.
-df["timestep"] = range(1, len(df) + 1)
+# Scenario: Adding timestep column to the email dataset
+df['timestep'] = range(1, num_records + 1)
+# Explanation: Add timestep column with incremental values to track changes
 
-# Display the generated dataset to validate test data
-df
+print(df)
+
+
+This script generates a DataFrame with random test data to validate the conditions mentioned in the user story. The `NOT_OPENED_EMAIL` column is computed based on the logic: emails that have been clicked but not opened are marked as True. Additionally, a `timestep` column is added to the dataset to simulate a progression or order of records.
