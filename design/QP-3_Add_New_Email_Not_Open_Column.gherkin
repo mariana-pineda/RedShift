@@ -1,0 +1,21 @@
+Feature: Add NOT_OPENED_EMAIL and timestep columns to email dataset
+
+  Scenario: Add NOT_OPENED_EMAIL column for emails that have been clicked but not opened
+    Given an email dataset with columns "IS_CLICKED" and "IS_OPENED"
+    When a subscriber has clicked an email
+    And the email has not been opened
+    Then the column "NOT_OPENED_EMAIL" should be added to the dataset
+    And the value should be TRUE for the corresponding email row
+
+  Scenario: Ensure NOT_OPENED_EMAIL column value is FALSE when conditions are not met
+    Given an email dataset with columns "IS_CLICKED" and "IS_OPENED"
+    When a subscriber has not clicked an email
+    Or the email has been opened
+    Then the column "NOT_OPENED_EMAIL" should be added to the dataset
+    And the value should be FALSE for the corresponding email row
+
+  Scenario: Adding timestep column to the email dataset
+    Given an email dataset
+    When making changes to the dataset
+    Then a new column "timestep" should be added
+    And each row should have a corresponding value in the "timestep" column
