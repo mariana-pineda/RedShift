@@ -1,37 +1,31 @@
-Feature: Inventory Transaction Table Data Mapping
+Feature: Inventory Transaction Table SQL Logic
 
-  Background:
-    Given the Inventory Transaction table "f_inv_movmnt" exists
+  Scenario: Validate data types consistency
+    Given the inventory transaction introduction and SQL schema
+    When `expired_dt`, `cancel_dt`, and `expired_qt` fields are compared
+    Then they should have consistent data types across both documentations
 
-  Scenario: Verify data type consistency
-    When ensuring data type consistency
-    Then the data types for "expired_dt", "cancel_dt", and "expired_qt" should be consistent across SQL schema and documentation
+  Scenario: Handle ambiguous logic for financial_qty and net_qty
+    Given potential overlapping conditions for `financial_qty` and `net_qty`
+    When implementing logic for these fields
+    Then ensure conditions are well defined to avoid conflicts
 
-  Scenario: Calculate financial_qty and net_qty
-    Given the source tables for "financial_qty" and "net_qty" are available
-    When computing "financial_qty" and "net_qty"
-    Then the logic must not have overlapping or conflicting conditions
-    And the calculations should not cause errors during implementation
+  Scenario: Transform source columns for target fields
+    Given the source columns and partial logic for `item_nbr` and `unit_cost`
+    When transforming source data to target fields
+    Then follow precise transformation or business rules as per mapping details
 
-  Scenario: Source column transformations
-    Given the source columns "item_nbr" and "unit_cost" are identified
-    When transforming data for "item_nbr" and "unit_cost"
-    Then precise transformation rules and business logic should be defined
-    And handle any data discrepancies or errors
+  Scenario: Manage discrepancies or errors in data
+    Given the inventory transaction table logic
+    When dealing with null values or discrepancies
+    Then define business rules to handle such cases with default values
 
-  Scenario: Handle discrepancies and errors
-    Given the data might have discrepancies or errors such as null values
-    When processing the data
-    Then implement default values or error-handling rules for null values
+  Scenario: Handle field uniqueness constraints
+    Given constraints on fields with assumed uniqueness marked 1.0
+    When checking for duplicates in these fields
+    Then clarify and ensure duplicates are managed or avoided
 
-  Scenario: Ensure uniqueness for constrained fields
-    Given certain fields marked with 1.0 are considered unique
-    When inserting or updating data in the table
-    Then ensure uniqueness constraints are enforced to prevent duplicates
-
-  Scenario: Manage timestamps for creation and updates
-    Given the timestamps "crt_dt" and "updt_dt" need management
-    When creating or updating records
-    Then ensure "crt_dt" is set upon creation
-    And "updt_dt" is updated in sequence with operations
-
+  Scenario: Manage timestamps crt_dt and updt_dt
+    Given the inventory transaction operations involving timestamps
+    When performing create or update operations
+    Then define the sequence and method for updating `crt_dt` and `updt_dt` timestamps
