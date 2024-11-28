@@ -1,37 +1,34 @@
 import pandas as pd
+import pytest
 import numpy as np
 
-# Function to generate random boolean values
-def random_bool():
-    return np.random.choice([True, False])
-
-# Creating the initial dataset with IS_CLICKED and IS_OPENED columns
-np.random.seed(0)  # For reproducibility
+# Sample data for testing
 data = {
-    "IS_CLICKED": [random_bool() for _ in range(30)],
-    "IS_OPENED": [random_bool() for _ in range(30)]
+    "IS_CLICKED": [True, False, True, False, True],
+    "IS_OPENED": [False, True, True, False, False]
 }
 
-df = pd.DataFrame(data)
+expected_not_opened_email = [True, False, False, False, True]
 
-# Expected values based on conditions
-expected_not_opened_email = df.apply(
-    lambda row: True if row["IS_CLICKED"] and not row["IS_OPENED"] else False, axis=1
-)
-expected_timestep = list(range(1, len(df) + 1))
+# Test function to validate NOT_OPENED_EMAIL and timestep columns
+def test_add_columns():
+    df = pd.DataFrame(data)
+    
+    # Apply the logic to add the NOT_OPENED_EMAIL column
+    df["NOT_OPENED_EMAIL"] = df.apply(
+        lambda row: True if row["IS_CLICKED"] and not row["IS_OPENED"] else False, axis=1
+    )
+    
+    # Assert each condition for NOT_OPENED_EMAIL
+    assert df["NOT_OPENED_EMAIL"].tolist() == expected_not_opened_email
+    
+    # Applying the timestep logic to validate the addition of the column
+    df["timestep"] = range(1, len(df) + 1)
+    
+    # Assert that timestep column is added correctly
+    expected_timestep = list(range(1, len(df) + 1))
+    assert df["timestep"].tolist() == expected_timestep
 
-# Adding the NOT_OPENED_EMAIL column based on conditions
-df["NOT_OPENED_EMAIL"] = df.apply(
-    lambda row: True if row["IS_CLICKED"] and not row["IS_OPENED"] else False, axis=1
-)
-
-# Adding the timestep column to the dataset
-df["timestep"] = range(1, len(df) + 1)
-
-# Validation
-not_opened_email_test = (df["NOT_OPENED_EMAIL"] == expected_not_opened_email).all()
-timestep_test = (df["timestep"] == expected_timestep).all()
-
-print(f"NOT_OPENED_EMAIL column validation: {'Passed' if not_opened_email_test else 'Failed'}")
-print(f"Timestep column validation: {'Passed' if timestep_test else 'Failed'}")
-
+# If running through pytest, this would be automatically discovered and executed
+if __name__ == "__main__":
+    pytest.main([__file__])
