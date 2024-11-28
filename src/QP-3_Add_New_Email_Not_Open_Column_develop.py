@@ -1,12 +1,27 @@
 import pandas as pd
+import numpy as np
 
-def add_columns_to_email_dataset(df):
-    # Add NOT_OPENED_EMAIL column based on conditions
-    df["NOT_OPENED_EMAIL"] = df.apply(
-        lambda row: True if row["IS_CLICKED"] and not row["IS_OPENED"] else False, axis=1
-    )
+# Function to generate random boolean values
+def random_bool():
+    return np.random.choice([True, False])
 
-    # Add timestep column to the dataset
-    df["timestep"] = range(1, len(df) + 1)
+# Initial dataset creation with IS_CLICKED and IS_OPENED columns
+np.random.seed(0)  # For reproducibility
+data = {
+    "IS_CLICKED": [random_bool() for _ in range(30)],
+    "IS_OPENED": [random_bool() for _ in range(30)]
+}
 
-    return df
+df = pd.DataFrame(data)
+
+# Adding the NOT_OPENED_EMAIL column based on conditions
+df["NOT_OPENED_EMAIL"] = df.apply(
+    lambda row: row["IS_CLICKED"] and not row["IS_OPENED"], axis=1
+)
+
+# Adding the timestep column to the dataset
+df["timestep"] = range(1, len(df) + 1)
+
+# Display the dataset
+print(df)
+
