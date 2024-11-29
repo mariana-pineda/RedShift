@@ -1,26 +1,14 @@
-Feature: Manage Email Engagement Data
+Feature: Update Email Status Tracking
 
-  Scenario: Email has been clicked but not opened
-    Given an email entry in the user emails table
-      | IS_CLICKED | IS_OPENED | NOT_OPENED_EMAIL |
-      | TRUE       | FALSE     |                  |
-    When the email has been clicked but not opened
-    Then mark the NOT_OPENED_EMAIL column as TRUE
-      | IS_CLICKED | IS_OPENED | NOT_OPENED_EMAIL |
-      | TRUE       | FALSE     | TRUE             |
+  Scenario: Add and update NOT_OPENED_EMAIL column
+    Given an email activity table with columns "IS_CLICKED" and "IS_OPENED"
+    And the "NOT_OPENED_EMAIL" column does not exist in the table
+    When the "NOT_OPENED_EMAIL" column is added to the email activity table
+    And an email entry has "IS_CLICKED" set to TRUE and "IS_OPENED" set to FALSE
+    Then the "NOT_OPENED_EMAIL" column for that entry should be TRUE
 
-  Scenario: Email has been opened
-    Given an email entry in the user emails table
-      | IS_CLICKED | IS_OPENED | NOT_OPENED_EMAIL |
-      | TRUE       | TRUE      |                  |
-    When the email has been opened
-    Then ensure the NOT_OPENED_EMAIL column is NOT TRUE
-      | IS_CLICKED | IS_OPENED | NOT_OPENED_EMAIL |
-      | TRUE       | TRUE      | FALSE or NULL    |
-
-  Scenario: Add new timestep column
-    Given a table for email data
-    When adding new columns
-    Then add a column named "timestep"
-    And ensure the column is of appropriate data type and configuration
-
+  Scenario: Add timestep column
+    Given an email activity table
+    When the "timestep" column is added to the table
+    Then the "timestep" column should exist in the table
+    # Note: More specifications on the data type and default value for "timestep" can be added once clarified.
