@@ -1,33 +1,24 @@
-Feature: Update users table with NOT_OPENED_EMAIL and timestep columns
+Feature: Update email tracking data structure
 
-  Scenario: Mark NOT_OPENED_EMAIL as TRUE for specific conditions
-    Given a user with IS_CLICKED = TRUE and IS_OPENED = FALSE
-    When I update the users table
-    Then the column NOT_OPENED_EMAIL is set to TRUE
+  Background:
+    Given an existing database for email tracking
 
-  Scenario: Add timestep column to a specified table
-    Given the requirement to add a timestep column
-    When I update the database schema
-    Then the timestep column is added 
-    And it should have a data type defined
-    And the table where this column is added should be specified
+  Scenario: Add NOT_OPENED_EMAIL column
+    When I add a new column "NOT_OPENED_EMAIL" to the email tracking table
+    Then the column should be initialized with default value FALSE
 
-  Scenario: Default values for existing data
-    Given existing user data
-    When the NOT_OPENED_EMAIL and timestep columns are added
-    Then default values should be populated for these columns
+  Scenario: Logic for NOT_OPENED_EMAIL
+    Given an email entry in the email tracking table
+    And IS_CLICKED is TRUE
+    And IS_OPENED is FALSE
+    When I evaluate the email entry
+    Then NOT_OPENED_EMAIL should be set to TRUE
 
-  Scenario: Maintenance of "categoryGroup" predefined categories
-    Given the customers' table with "categoryGroup" column
-    When the predefined categories need updates 
-    Then a process for maintaining and updating must be established
+  Scenario: Add timestep column
+    When I add a new column "timestep" to the appropriate table
+    Then the column should have a defined data type and default value
 
-  Scenario: Indexing for performance
-    Given newly created columns in the table
-    When considering performance implications
-    Then decide if indexing is necessary based on use case
-
-  Scenario: Reflecting changes in integration and unit tests
-    Given a test suite for the table schema
-    When new columns and logic are added
-    Then ensure integration and unit tests are updated to validate new logic
+  Scenario: Verify logic implementation
+    Given test data with varying IS_CLICKED and IS_OPENED values
+    When I execute the logic for setting NOT_OPENED_EMAIL
+    Then the NOT_OPENED_EMAIL column should reflect the correct state for each entry
