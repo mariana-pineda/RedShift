@@ -1,38 +1,33 @@
-Feature: Update database schema with new columns
+Feature: Update users table with NOT_OPENED_EMAIL and timestep columns
 
-  Background:
-    Given a database existing with multiple similar SQL table definitions
-    And the tables include a definition for "instagram.stories"
+  Scenario: Mark NOT_OPENED_EMAIL as TRUE for specific conditions
+    Given a user with IS_CLICKED = TRUE and IS_OPENED = FALSE
+    When I update the users table
+    Then the column NOT_OPENED_EMAIL is set to TRUE
 
-  Scenario: Add "NOT_OPENED_EMAIL" column to identify unopened emails
-    Given a column "IS_CLICKED" with values
-    And a column "IS_OPENED" with values
-    When an email associated with a view is clicked (IS_CLICKED = TRUE)
-    And the email has not been opened (IS_OPENED = FALSE)
-    Then a new column "NOT_OPENED_EMAIL" should be created 
-    And it should be marked as TRUE for the respective row
+  Scenario: Add timestep column to a specified table
+    Given the requirement to add a timestep column
+    When I update the database schema
+    Then the timestep column is added 
+    And it should have a data type defined
+    And the table where this column is added should be specified
 
-  Scenario: Add "timestep" column to the schema
-    Given the existing database with unspecified purpose for new data
-    When a new column "timestep" is added
-    Then there should be a defined data type for "timestep"
-    And it should be included in the database documentation for clarification
+  Scenario: Default values for existing data
+    Given existing user data
+    When the NOT_OPENED_EMAIL and timestep columns are added
+    Then default values should be populated for these columns
 
-  Scenario: Backfill data when new columns are added
-    Given existing data in the database
-    When new columns "NOT_OPENED_EMAIL" and "timestep" are added
-    Then the existing data should be considered for backfill
-    And the methodology for backfilling should be documented
+  Scenario: Maintenance of "categoryGroup" predefined categories
+    Given the customers' table with "categoryGroup" column
+    When the predefined categories need updates 
+    Then a process for maintaining and updating must be established
 
-  Scenario: Validate new schema changes across environments
-    Given development, testing, and production environments
-    When changes are made to the schema
-    Then validation of these changes should be conducted in each environment
-    And any discrepancies should be documented and resolved
+  Scenario: Indexing for performance
+    Given newly created columns in the table
+    When considering performance implications
+    Then decide if indexing is necessary based on use case
 
-  Scenario: Manage connection settings across environments
-    Given multiple scripts connecting to Redshift and Databricks
-    And repeated imports and exports of these scripts
-    When managing connections
-    Then a centralized method for managing connection settings should be implemented
-    And guidance should be provided to ensure consistency across environments
+  Scenario: Reflecting changes in integration and unit tests
+    Given a test suite for the table schema
+    When new columns and logic are added
+    Then ensure integration and unit tests are updated to validate new logic
