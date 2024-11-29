@@ -1,24 +1,26 @@
-Feature: Update email tracking data structure
+Feature: Manage Email Engagement Data
 
-  Background:
-    Given an existing database for email tracking
+  Scenario: Email has been clicked but not opened
+    Given an email entry in the user emails table
+      | IS_CLICKED | IS_OPENED | NOT_OPENED_EMAIL |
+      | TRUE       | FALSE     |                  |
+    When the email has been clicked but not opened
+    Then mark the NOT_OPENED_EMAIL column as TRUE
+      | IS_CLICKED | IS_OPENED | NOT_OPENED_EMAIL |
+      | TRUE       | FALSE     | TRUE             |
 
-  Scenario: Add NOT_OPENED_EMAIL column
-    When I add a new column "NOT_OPENED_EMAIL" to the email tracking table
-    Then the column should be initialized with default value FALSE
+  Scenario: Email has been opened
+    Given an email entry in the user emails table
+      | IS_CLICKED | IS_OPENED | NOT_OPENED_EMAIL |
+      | TRUE       | TRUE      |                  |
+    When the email has been opened
+    Then ensure the NOT_OPENED_EMAIL column is NOT TRUE
+      | IS_CLICKED | IS_OPENED | NOT_OPENED_EMAIL |
+      | TRUE       | TRUE      | FALSE or NULL    |
 
-  Scenario: Logic for NOT_OPENED_EMAIL
-    Given an email entry in the email tracking table
-    And IS_CLICKED is TRUE
-    And IS_OPENED is FALSE
-    When I evaluate the email entry
-    Then NOT_OPENED_EMAIL should be set to TRUE
+  Scenario: Add new timestep column
+    Given a table for email data
+    When adding new columns
+    Then add a column named "timestep"
+    And ensure the column is of appropriate data type and configuration
 
-  Scenario: Add timestep column
-    When I add a new column "timestep" to the appropriate table
-    Then the column should have a defined data type and default value
-
-  Scenario: Verify logic implementation
-    Given test data with varying IS_CLICKED and IS_OPENED values
-    When I execute the logic for setting NOT_OPENED_EMAIL
-    Then the NOT_OPENED_EMAIL column should reflect the correct state for each entry
