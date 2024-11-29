@@ -1,0 +1,35 @@
+Feature: Synchronize d_product_sk table with d_product table
+
+  Background:
+    Given the d_product table exists
+    And the d_product_sk table exists
+
+  Scenario: Trigger synchronization when d_product table is refreshed
+    When the d_product table is refreshed
+    Then the synchronization process should start
+
+  Scenario: Delete records in d_product_sk that exist in d_product
+    Given the d_product table has refreshed data
+    And there are records in d_product_sk with matching prod_id in d_product
+    When the synchronization process is triggered
+    Then delete those records from d_product_sk
+
+  Scenario: Insert missing records into d_product_sk
+    Given the d_product table has refreshed data
+    And there are prod_id records in d_product that do not exist in d_product_sk
+    When the synchronization process is triggered
+    Then insert those records into d_product_sk 
+    And auto-increment the plant_key_sn starting from the max value
+
+  Scenario: Handle non-unique prod_id in d_product
+    Given the d_product table has duplicate prod_id entries
+    When the synchronization process is triggered
+    Then ensure that duplicate handling logic is in place
+
+  Scenario: Log errors during synchronization
+    When the synchronization process encounters an error
+    Then log the error details
+
+  Scenario: Ensure performance efficiency
+    When the synchronization process is triggered
+    Then optimize for performance based on table size
