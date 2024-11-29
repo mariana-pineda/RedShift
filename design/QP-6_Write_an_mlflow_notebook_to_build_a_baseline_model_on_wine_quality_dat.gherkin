@@ -1,0 +1,37 @@
+Feature: Train a Random Forest Model on the Wine Dataset
+
+  Background:
+    Given the wine data set is located at "/dbfs/databricks-datasets/wine-quality/winequality-white.csv"
+    And the data entries are separated by ";"
+    And the experiment will be stored in "/Workspace/Shared/purgo_poc/winequality-experiement"
+
+  Scenario: Load and preprocess the wine dataset
+    Given the wine dataset is loaded
+    When the dataset is preprocessed
+    Then the last column "quality" should be converted to "high_quality"
+    And "high_quality" is true if original "quality" > 6, otherwise false
+
+  Scenario: Split the dataset
+    Given the dataset has been preprocessed
+    When the dataset is split
+    Then 60% of the data should be allocated for training
+    And 20% of the data should be allocated for validation
+    And 20% of the data should be allocated for testing
+
+  Scenario: Train the Random Forest Model
+    Given the training dataset is prepared
+    When the random forest model is initialized
+    Then the model should be trained on the training dataset
+
+  Scenario: Validate and test the Random Forest Model
+    Given the validation dataset is prepared
+    When the model is validated
+    Then the model performance metrics should be calculated
+    And the test dataset is prepared
+    When the model is tested
+    Then the test performance metrics should be calculated
+
+  Scenario: Log the experiment with MLflow
+    Given the MLflow tracking is set up
+    When the experiment is logged
+    Then the experiment should be stored in "/Workspace/Shared/purgo_poc/winequality-experiement"
