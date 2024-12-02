@@ -1,0 +1,26 @@
+Feature: Add NOT_OPENED_EMAIL column to mark emails that have been clicked but not opened
+
+  Scenario: Mark email as not opened when clicked but not opened
+    Given a table with columns "IS_CLICKED" and "IS_OPENED"
+    When a row has "IS_CLICKED" = TRUE and "IS_OPENED" = FALSE
+    Then the new column "NOT_OPENED_EMAIL" should be TRUE for that row
+
+  Scenario: Do not mark email as not opened when not clicked
+    Given a table with columns "IS_CLICKED" and "IS_OPENED"
+    When a row has "IS_CLICKED" = FALSE
+    Then the new column "NOT_OPENED_EMAIL" should be FALSE for that row
+
+  Scenario: Do not mark email as not opened when opened
+    Given a table with columns "IS_CLICKED" and "IS_OPENED"
+    When a row has "IS_OPENED" = TRUE
+    Then the new column "NOT_OPENED_EMAIL" should be FALSE for that row
+
+  Scenario: Handle null or missing values in IS_CLICKED or IS_OPENED
+    Given a table with columns "IS_CLICKED" and "IS_OPENED"
+    When a row has null or missing values in "IS_CLICKED" or "IS_OPENED"
+    Then the new column "NOT_OPENED_EMAIL" should be FALSE for that row
+
+  Scenario: Handle both IS_CLICKED and IS_OPENED as false
+    Given a table with columns "IS_CLICKED" and "IS_OPENED"
+    When a row has "IS_CLICKED" = FALSE and "IS_OPENED" = FALSE
+    Then the new column "NOT_OPENED_EMAIL" should be FALSE for that row
