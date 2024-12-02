@@ -1,19 +1,17 @@
-Feature: Add NOT_OPENED_EMAIL and timestamps columns to email tracking table
+Feature: Mark un-opened but clicked emails
 
-  Scenario: Mark emails as not opened when clicked but not opened
-    Given an email tracking table with columns "IS_CLICKED" and "IS_OPENED"
-    When a row has "IS_CLICKED" = TRUE and "IS_OPENED" = FALSE
-    Then add a new column "NOT_OPENED_EMAIL" with value TRUE for that row
-    And add a new column "timestamps" with the current timestamp in seconds for that row
+  Scenario: Add a new column to identify emails that have been clicked but not opened
+    Given a dataset containing columns "IS_CLICKED" and "IS_OPENED"
+    When the column "IS_CLICKED" is TRUE and "IS_OPENED" is FALSE for a row in the dataset
+    Then add a new column named "NOT_OPENED_EMAIL" to the dataset
+    And set the value of "NOT_OPENED_EMAIL" to TRUE for that row
 
-  Scenario: Handle rows where email is not clicked or is opened
-    Given an email tracking table with columns "IS_CLICKED" and "IS_OPENED"
-    When a row has "IS_CLICKED" = FALSE or "IS_OPENED" = TRUE
-    Then ensure the "NOT_OPENED_EMAIL" column is not set to TRUE for that row
-    And add a new column "timestamps" with the current timestamp in seconds for that row
+  Scenario: No changes for emails that have been opened
+    Given a dataset containing columns "IS_CLICKED" and "IS_OPENED"
+    When the column "IS_OPENED" is TRUE for a row in the dataset
+    Then ensure the new column "NOT_OPENED_EMAIL" is not set to TRUE for that row
 
-  Scenario: Handle null or missing values in IS_CLICKED or IS_OPENED
-    Given an email tracking table with columns "IS_CLICKED" and "IS_OPENED"
-    When a row has null or missing values in "IS_CLICKED" or "IS_OPENED"
-    Then ensure the "NOT_OPENED_EMAIL" column is not set to TRUE for that row
-    And add a new column "timestamps" with the current timestamp in seconds for that row
+  Scenario: No changes for emails that have not been clicked
+    Given a dataset containing columns "IS_CLICKED" and "IS_OPENED"
+    When the column "IS_CLICKED" is FALSE for a row in the dataset
+    Then ensure the new column "NOT_OPENED_EMAIL" is not set to TRUE for that row
