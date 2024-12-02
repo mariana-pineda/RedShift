@@ -15,3 +15,4 @@ CREATE TABLE purgo_playground.event_log (
   accesslist STRING,
   objectname STRING
 )
+
