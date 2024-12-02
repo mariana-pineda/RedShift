@@ -1,24 +1,37 @@
-Feature: Inventory Transaction Table SQL Logic
+Feature: Inventory Transaction Table SQL Logic Creation
 
-  Scenario: Develop SQL-based logic for f_inv_movmnt table
-    Given field mappings for the f_inv_movmnt table are provided in an Excel file
-    When the SQL-based logic is developed using the source tables as per the mappings
-    Then data from the source tables should be accurately mapped to target fields in the f_inv_movmnt table
-    And handle any data discrepancies during the data migration process appropriately
-    And ensure data migration is consistent with performance requirements
-    And validate the correctness of the migrated data
+  Scenario: Create SQL logic for f_inv_movmnt with field mappings
+    Given the field mappings from the attached Excel file
+    When I develop SQL-based logic for the f_inv_movmnt table
+    Then the fields are correctly mapped according to the provided Excel file
+    And a new field "timestamp to date" is added to the f_inv_movmnt table
+    And all necessary data transformations are applied
 
-  Scenario: Determine execution frequency for SQL-based logic
-    Given a need to determine if the SQL-based logic is a one-time or recurring process
-    When scheduling the execution of the SQL-based logic
-    Then define it as either a one-time migration or a schedule for recurring updates
+  Scenario: Validate data transformation rules
+    Given the source tables with unspecified data transformation logic
+    When I create the SQL-based logic
+    Then ensure the data transformation rules are correctly implemented
+    And appropriate aggregation or calculation rules are applied
 
-  Scenario: Implement security measures for inventory data
-    Given that security and access control are important for inventory transaction data
-    When implementing the SQL-based logic
-    Then ensure appropriate security measures and access controls are in place
+  Scenario: Handle timestamp to date conversion
+    Given the requirement to add a new field "timestamp to date"
+    When I transform the timestamp data
+    Then ensure the correct conversion logic is applied
 
-  Scenario: Validate conversion of data to target table fields
-    Given the SQL-based logic is applied to populate the f_inv_movmnt table
-    When the data is migrated from the source tables
-    Then verify the correctness of the data in the target table using validation checks
+  Scenario: Maintain data integrity
+    Given updates or changes in the source tables
+    When reflecting changes in the f_inv_movmnt table
+    Then ensure data integrity is maintained
+    And the latest data is accurately updated in the target table
+
+  Scenario: Null and missing value handling
+    Given the presence of missing or null values in the source data
+    When ingesting data into f_inv_movmnt
+    Then ensure null or missing values are handled correctly
+    And do not corrupt the target table data
+
+  Scenario: Validate SQL-based logic
+    Given SQL-based logic for f_inv_movmnt
+    When validation of the logic is performed
+    Then ensure it meets all requirements and criteria
+    And passes all necessary testing and verification
