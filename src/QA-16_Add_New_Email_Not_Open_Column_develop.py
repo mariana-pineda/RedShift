@@ -1,7 +1,7 @@
 import pandas as pd
 import time
 
-def add_columns_to_email_tracking(df):
+def add_columns_to_dataframe(df):
     # Add NOT_OPENED_EMAIL column
     df['NOT_OPENED_EMAIL'] = df.apply(lambda row: row['IS_CLICKED'] and not row['IS_OPENED'], axis=1)
     
@@ -11,7 +11,11 @@ def add_columns_to_email_tracking(df):
     return df
 
 # Example usage
-# Assuming df is your existing DataFrame with 'IS_CLICKED' and 'IS_OPENED' columns
-# df = pd.DataFrame({'IS_CLICKED': [True, False, True], 'IS_OPENED': [False, False, True]})
-# df = add_columns_to_email_tracking(df)
-# print(df)
+data = {
+    'IS_CLICKED': [True, False, True, True],
+    'IS_OPENED': [False, False, True, False]
+}
+
+df = pd.DataFrame(data)
+df = add_columns_to_dataframe(df)
+print(df)
