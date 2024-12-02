@@ -1,22 +1,24 @@
-Feature: Inventory Transaction Table Logic
+Feature: Inventory Transaction Table SQL Logic
 
-  Scenario: Generating SQL Logic for Inventory Transaction Table
+  Scenario: Develop SQL-based logic for f_inv_movmnt table
+    Given field mappings for the f_inv_movmnt table are provided in an Excel file
+    When the SQL-based logic is developed using the source tables as per the mappings
+    Then data from the source tables should be accurately mapped to target fields in the f_inv_movmnt table
+    And handle any data discrepancies during the data migration process appropriately
+    And ensure data migration is consistent with performance requirements
+    And validate the correctness of the migrated data
 
-    Given a detailed mapping of each field in the target table from the attached Excel file
-    When I develop SQL-based logic for populating the Inventory Transaction table (f_inv_movmnt)
-    Then the SQL logic should populate the table based on the mappings provided
+  Scenario: Determine execution frequency for SQL-based logic
+    Given a need to determine if the SQL-based logic is a one-time or recurring process
+    When scheduling the execution of the SQL-based logic
+    Then define it as either a one-time migration or a schedule for recurring updates
 
-  Scenario Outline: Field Mapping from Source Tables
+  Scenario: Implement security measures for inventory data
+    Given that security and access control are important for inventory transaction data
+    When implementing the SQL-based logic
+    Then ensure appropriate security measures and access controls are in place
 
-    Given the field mapping for <FieldName> from <SourceTable>
-    When I implement the SQL logic for populating the f_inv_movmnt table with <FieldName>
-    Then the resulting data should correctly reflect the mapping and data requirements
-    
-    Examples: 
-      | FieldName            | SourceTable |
-      | TransactionID        | TableA      |
-      | ItemCode             | TableB      |
-      | QuantityReceived     | TableC      |
-      | DateReceived         | TableD      |
-      | SupplierName         | TableE      |
-
+  Scenario: Validate conversion of data to target table fields
+    Given the SQL-based logic is applied to populate the f_inv_movmnt table
+    When the data is migrated from the source tables
+    Then verify the correctness of the data in the target table using validation checks
