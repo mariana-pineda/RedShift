@@ -1,0 +1,19 @@
+Feature: Extract product size from product description
+
+  Scenario: Successfully extract product size from product description
+    Given a product description in a known format
+    When I attempt to extract the product size
+    Then I should successfully extract the product size in the expected output format
+
+  Scenario: Extract product size using product ID fallback
+    Given a product description where extraction of product size is not possible
+    When I attempt to extract the product size
+    And extraction fails
+    Then I should use the product ID to determine the product size
+
+  Scenario: Handle error during extraction process
+    Given a product description
+    When an unexpected error occurs during extraction
+    Then I should handle the error according to error handling procedures
+    And log the error for further investigation
+
