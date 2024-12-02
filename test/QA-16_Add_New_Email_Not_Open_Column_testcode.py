@@ -2,10 +2,9 @@ import unittest
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
-class TestEmailTrackingData(unittest.TestCase):
+class TestEmailStatusColumns(unittest.TestCase):
 
     def setUp(self):
-        # Generate test data
         self.test_data = generate_test_data()
 
     def test_not_opened_email_column(self):
@@ -13,13 +12,18 @@ class TestEmailTrackingData(unittest.TestCase):
         for index, row in self.test_data.iterrows():
             expected_value = row['IS_CLICKED'] and not row['IS_OPENED']
             actual_value = row['NOT_OPENED_EMAIL']
-            self.assertEqual(expected_value, actual_value, f"Row {index} failed: Expected NOT_OPENED_EMAIL to be {expected_value} but got {actual_value}")
+            self.assertEqual(expected_value, actual_value, f"Row {index} failed: Expected {expected_value}, got {actual_value}")
 
     def test_timestamps_column(self):
-        # Validate _timestamps_ column is present and in seconds
-        self.assertIn('_timestamps_', self.test_data.columns, "_timestamps_ column is missing")
-        for index, timestamp in enumerate(self.test_data['_timestamps_']):
-            self.assertIsInstance(timestamp, int, f"Row {index} failed: _timestamps_ is not an integer")
+        # Validate _timestamps_ column is in seconds
+        for index, row in self.test_data.iterrows():
+            self.assertIsInstance(row['_timestamps_'], int, f"Row {index} failed: _timestamps_ is not an integer")
+
+    def test_data_integrity(self):
+        # Ensure no data is lost or altered unexpectedly
+        expected_columns = ['IS_CLICKED', 'IS_OPENED', 'NOT_OPENED_EMAIL', '_timestamps_']
+        actual_columns = list(self.test_data.columns)
+        self.assertListEqual(expected_columns, actual_columns, f"Expected columns {expected_columns}, but got {actual_columns}")
 
 if __name__ == '__main__':
     unittest.main(argv=[''], exit=False)
