@@ -1,0 +1,43 @@
+Feature: Data Quality Checks for Tepezza Sales Data
+
+  Background:
+    Given a sample dataset of Tepezza sales data
+    And rule definitions provided for each data quality category
+
+  Scenario: Verify Demand and Quantity realistic ranges
+    Given a dataset value for Demand is present
+    When I apply the realistic range rule for Demand
+    Then the Demand value should be within the realistic range
+    And
+    Given a dataset value for Quantity is present
+    When I apply the realistic range rule for Quantity
+    Then the Quantity value should be within the realistic range
+
+  Scenario: Validate Price Calculation Accuracy
+    Given a dataset value for Unit_Price is present
+    And method for calculating or retrieving Unit_Price is defined
+    When I perform the Price Calculation Accuracy check
+    Then the calculated price should match the expected Unit_Price
+
+  Scenario: Verify Reverse Logistics Steps for Returned Products
+    Given a product is marked as returned in the dataset
+    When I validate the reverse logistics steps
+    Then all required reverse logistics steps should be correctly validated or initiated
+
+  Scenario: Validate Correct Unit Shipment Type
+    Given a shipment type is listed in the dataset
+    And definitions for "small quantities" or other shipment types are provided
+    When I apply the rule for Correct Unit Shipment Type
+    Then the shipment type should match the defined criteria
+
+  Scenario: Handling Failed DQ Checks
+    Given a record fails a data quality check
+    When I identify actions required for failed data
+    And I determine systems involved for mitigation
+    Then appropriate measures should be taken to address the data quality failure
+
+  Scenario: Output and Reporting of DQ Checks
+    Given the data quality checks have been performed
+    When I generate the report
+    Then the report should include the results of all DQ checks
+    And should follow the expected reporting format
