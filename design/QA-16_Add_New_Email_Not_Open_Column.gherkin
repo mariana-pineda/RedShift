@@ -1,11 +1,19 @@
-Feature: Add new columns to track email status and timestamps
+Feature: Add NOT_OPENED_EMAIL and timestamps columns to email tracking table
 
-  Scenario: Add NOT_OPENED_EMAIL column and mark rows
-    Given a table with columns IS_CLICKED and IS_OPENED
-    When a row has IS_CLICKED = TRUE and IS_OPENED = FALSE
+  Scenario: Mark emails as not opened when clicked but not opened
+    Given an email tracking table with columns "IS_CLICKED" and "IS_OPENED"
+    When a row has "IS_CLICKED" = TRUE and "IS_OPENED" = FALSE
     Then add a new column "NOT_OPENED_EMAIL" with value TRUE for that row
+    And add a new column "timestamps" with the current timestamp in seconds for that row
 
-  Scenario: Add _timestamps_ column
-    Given a table with existing data
-    When adding a new column "_timestamps_"
-    Then ensure the column is added with data type in seconds
+  Scenario: Handle rows where email is not clicked or is opened
+    Given an email tracking table with columns "IS_CLICKED" and "IS_OPENED"
+    When a row has "IS_CLICKED" = FALSE or "IS_OPENED" = TRUE
+    Then ensure the "NOT_OPENED_EMAIL" column is not set to TRUE for that row
+    And add a new column "timestamps" with the current timestamp in seconds for that row
+
+  Scenario: Handle null or missing values in IS_CLICKED or IS_OPENED
+    Given an email tracking table with columns "IS_CLICKED" and "IS_OPENED"
+    When a row has null or missing values in "IS_CLICKED" or "IS_OPENED"
+    Then ensure the "NOT_OPENED_EMAIL" column is not set to TRUE for that row
+    And add a new column "timestamps" with the current timestamp in seconds for that row
