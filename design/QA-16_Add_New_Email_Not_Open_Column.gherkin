@@ -1,11 +1,11 @@
-Feature: Add new columns to email tracking data
+Feature: Add new columns to track email status and timestamps
 
-  Scenario: Add NOT_OPENED_EMAIL column
-    Given an email tracking table with columns IS_CLICKED and IS_OPENED
+  Scenario: Add NOT_OPENED_EMAIL column and mark rows
+    Given a table with columns IS_CLICKED and IS_OPENED
     When a row has IS_CLICKED = TRUE and IS_OPENED = FALSE
-    Then set the NOT_OPENED_EMAIL column to TRUE for that row
+    Then add a new column "NOT_OPENED_EMAIL" with value TRUE for that row
 
   Scenario: Add _timestamps_ column
-    Given an email tracking table
-    When adding a new column
-    Then add a column named _timestamps_ with data type in seconds
+    Given a table with existing data
+    When adding a new column "_timestamps_"
+    Then ensure the column is added with data type in seconds
