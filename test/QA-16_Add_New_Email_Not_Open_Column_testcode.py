@@ -1,24 +1,25 @@
+import unittest
 import pandas as pd
+from pandas.testing import assert_frame_equal
 
-# Function to validate the NOT_OPENED_EMAIL column
-def validate_not_opened_email(test_data):
-    for index, row in test_data.iterrows():
-        is_clicked = row['IS_CLICKED']
-        is_opened = row['IS_OPENED']
-        expected_not_opened_email = row['NOT_OPENED_EMAIL']
+class TestEmailTrackingData(unittest.TestCase):
 
-        # Determine the expected value based on the conditions
-        if is_clicked == True and is_opened == False:
-            expected_value = True
-        else:
-            expected_value = False
+    def setUp(self):
+        # Generate test data
+        self.test_data = generate_test_data()
 
-        # Compare expected and actual values
-        assert expected_not_opened_email == expected_value, (
-            f"Row {index} failed: IS_CLICKED={is_clicked}, IS_OPENED={is_opened}, "
-            f"Expected NOT_OPENED_EMAIL={expected_value}, "
-            f"Actual NOT_OPENED_EMAIL={expected_not_opened_email}"
-        )
+    def test_not_opened_email_column(self):
+        # Validate NOT_OPENED_EMAIL logic
+        for index, row in self.test_data.iterrows():
+            expected_value = row['IS_CLICKED'] and not row['IS_OPENED']
+            actual_value = row['NOT_OPENED_EMAIL']
+            self.assertEqual(expected_value, actual_value, f"Row {index} failed: Expected NOT_OPENED_EMAIL to be {expected_value} but got {actual_value}")
 
-# Validate the test data
-validate_not_opened_email(test_data)
+    def test_timestamps_column(self):
+        # Validate _timestamps_ column is present and in seconds
+        self.assertIn('_timestamps_', self.test_data.columns, "_timestamps_ column is missing")
+        for index, timestamp in enumerate(self.test_data['_timestamps_']):
+            self.assertIsInstance(timestamp, int, f"Row {index} failed: _timestamps_ is not an integer")
+
+if __name__ == '__main__':
+    unittest.main(argv=[''], exit=False)
