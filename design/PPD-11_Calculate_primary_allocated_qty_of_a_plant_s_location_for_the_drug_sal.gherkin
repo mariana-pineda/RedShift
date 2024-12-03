@@ -1,0 +1,22 @@
+Feature: Calculate Allocated Quantity in Inventory Stock Management
+
+  Scenario: Compute allocated_qty for an order in the f_order table
+    Given the f_order table entry exists with "order_nbr" and "order_line_nbr"
+    And the f_inv_movmnt table is used as the leading table
+    When I retrieve the qty values from primary_qty, open_qty, shipped_qty, and cancel_qty columns
+    And handle NULL values by treating them as zero
+    And ignore negative values during calculation
+    Then add the qty values to obtain allocated_qty
+    And update the f_order entry with this allocated_qty
+
+  Scenario: Handle discrepancies between Redshift and Databricks
+    Given the SQL logic is applied to both Redshift and Databricks
+    When discrepancies in allocated_qty are detected
+    Then log the discrepancies with order details
+    And investigate the cause for resolution
+
+  Scenario: Validate allocated_qty computation
+    Given the f_order entries with sample data
+    When the SQL logic is executed
+    Then verify that calculated allocated_qty matches expected results
+    And ensure all NULL and negative quantities are handled correctly
