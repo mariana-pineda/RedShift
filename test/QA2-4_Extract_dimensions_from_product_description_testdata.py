@@ -1,59 +1,55 @@
 import random
 
-descriptions_with_size = [
-    "This item has a size of 20x30x40.",              # Validate successful extraction
-    "Dimensions are 15cm x 25cm x 35cm.",             # Validate successful extraction with cm
-    "Size is 8.5 inches by 11 inches by 1 inch.",     # Validate extraction with inches
-    "Measures approximately 10x20x30 units.",         # Validate approximate size
-    "Dimension: Height 10 cm, Width 20 cm, Length 30 cm.",  # Validate mixed format
-]
+def generate_test_data():
+    descriptions = [
+        "The table measures 6ft x 4ft x 3ft.", # Product size can be extracted
+        "The chair is 40 inches by 20 inches.", # Product size can be extracted
+        "Dimensions: height 100cm, width 50cm, depth 25cm", # Ustructured but extractable
+        "Compact device.", # Unable to extract
+        "This is a versatile item that fits many spaces.", # Unable to extract
+        "Objects size: 150mm x 75mm x 50mm.", # Extractable in different unit
+        "Approximate dimensions are: 10' x 2'.", # Extractable sizes in both single and double quote
+        "Dimensions listed as 5m by 3m.", # Extractable in meters
+        "Length 2.5m, Width 1.5m, Height 1.8m are measured.", # Extractable with measurements embedded
+        "Not specified", # Unable to extract
+        "Product ID: 67890 with no size mentioned", # Unable to extract, product_id condition
+        "16 centimeters each side as width, depth, height.", # Extractable when unit is part of description
+        # Intentionally vague or irrelevant text
+        "Just a great product everyone loves!", # Unable to extract
+        "Perfectly sized for comfort, size details are in a separate file.", # Unable to extract
+        "See size chart for dimensions.", # Unable to extract
+        "Limited edition size not disclosed.", # Unable to extract
+        "Dimensions, weight, colors handled separately.", # Unable to extract
+        "Fits all standard sizes. No specific measurements.", # Unable to extract
+    ]
+    
+    product_ids = [12345, 67890, 24680, 13579, 98765] # Sample product IDs
 
-descriptions_without_size = [
-    "No specific dimensions.",                        # Validate fallback to product ID
-    "This product is dimensionless.",                 # Validate fallback to product ID
-    "Size not available.",                            # Validate fallback to product ID
-    "See product for dimensions.",                    # Validate fallback to product ID
-    "Dimensions: N/A.",                               # Validate fallback to product ID
-]
+    data = []
 
-malformed_data = [
-    "",                                               # Validate handling empty string
-    "Dimensions: unknown",                            # Validate handling unknown dimensions
-    "Dimensions: ???",                                # Validate handling malformed data
-    "Incomplete dimensions.",                         # Validate handling incomplete information
-    "Error retrieving dimensions.",                   # Validate handling error in dimensions
-]
+    for i in range(20): # Generate 20-30 records
+        description = random.choice(descriptions)
+        product_id = random.choice(product_ids) if "unable" in description.lower() or "not specified" in description.lower() else None
+        product_size = extract_product_size(description) if "dimensions" in description.lower() else "" # Simulate extraction function
 
-product_ids = [f'{random.randint(10000, 99999)}' for _ in range(30)]
+        data.append({
+            "product_description": description,
+            "product_size": product_size,
+            "product_id": product_id if not product_size else ""
+        })
+    
+    return data
 
-test_data = []
+def extract_product_size(description):
+    # Simulated extraction logic
+    if "dimensions" in description.lower() or "measures" in description.lower() or "by" in description:
+        extracted = " ".join(description.split()[1:]) # Simplified logic
+        return extracted
+    return ""
 
-# Generate test data for descriptions with size
-for description in descriptions_with_size:
-    test_data.append({
-        "product_description": description,
-        "expected_product_size": description.split(":")[1].strip(),
-        "product_id": random.choice(product_ids),
-    })
+# Print the generated test data
+generated_data = generate_test_data()
+for record in generated_data:
+    print(record)
 
-# Generate test data for descriptions without size, expect fallback on product ID
-for description in descriptions_without_size:
-    product_id = random.choice(product_ids)
-    test_data.append({
-        "product_description": description,
-        "expected_product_size": None,
-        "product_id": product_id,
-        "expected_fallback_product_id": product_id,    # Validate fallback mechanism
-    })
-
-# Generate test data for malformed data
-for description in malformed_data:
-    product_id = random.choice(product_ids)
-    test_data.append({
-        "product_description": description,
-        "expected_product_size": None,
-        "product_id": product_id,
-    })
-
-for data in test_data:
-    print(data)
+This script generates synthetic test data for evaluating the extraction of product size from product descriptions according to various conditions specified in the user story. It simulates both extractable descriptions and those that necessitate fallback to a product ID or receive no size data.
