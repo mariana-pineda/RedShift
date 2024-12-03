@@ -1,0 +1,45 @@
+Feature: Extract Product Size from Product Description
+
+  Background: 
+    Given the system has a pipeline to extract dimensions information from raw product descriptions
+
+  Scenario Outline: Successfully extracting product size from product description
+    Given a product description "<product_description>"
+    When the extraction logic is applied
+    Then the extracted product size should be "<expected_product_size>"
+    And it should be of type "<data_type>"
+
+  Examples:
+    | product_description                      | expected_product_size | data_type |
+    | "Size: 10 inches x 5 inches"             | 10x5                  | String   |
+    | "Dimensions: Height 20 inches, Width 10" | 20x10                 | String   |
+    | "This product measures 15x10 inches."    | 15x10                 | String   |
+
+  Scenario: Fallback to product ID when product size extraction fails
+    Given a product description "Not provided"
+    And a product ID "12345"
+    When the extraction logic fails to extract product size
+    Then the system should use the product ID "12345"
+
+  Scenario Outline: Handling edge cases for malformed data
+    Given a malformed product description "<malformed_description>"
+    When the extraction logic is applied
+    Then the system should log an error "Malformed data in description" 
+
+  Examples:
+    | malformed_description               |
+    | "Size unavailable"                  |
+    | "Dimensions not mentioned"          |
+    | "See product specs for measurements"|
+
+  Scenario: Verify extracted product size storage
+    Given a successfully extracted product size "10x5"
+    When the size is ready for storage
+    Then it should be stored in the product database
+
+  Scenario: Logging unsuccessful extractions
+    Given a product description with no size "TBD"
+    When the extraction fails
+    Then an error log should be created for "Unsuccessful extraction"
+
+
