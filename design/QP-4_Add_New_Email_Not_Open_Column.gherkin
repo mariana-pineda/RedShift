@@ -1,0 +1,23 @@
+Feature: Add NOT_OPENED_EMAIL column and timestamp to dataset
+
+  Scenario: Update record when IS_CLICKED is TRUE and IS_OPENED is FALSE
+    Given a dataset with columns "IS_CLICKED" and "IS_OPENED"
+    When a row has "IS_CLICKED" = TRUE and "IS_OPENED" = FALSE
+    Then add a new column "NOT_OPENED_EMAIL" with value TRUE for that row
+    And add a new column "TIMESTAMP" with the current date and time for that row
+
+  Scenario: Handle records where both IS_CLICKED and IS_OPENED are FALSE
+    Given a dataset with columns "IS_CLICKED" and "IS_OPENED"
+    When a row has "IS_CLICKED" = FALSE and "IS_OPENED" = FALSE
+    Then ensure "NOT_OPENED_EMAIL" column is not marked as TRUE for that row
+    And no new timestamp is added for that row
+
+  Scenario: Newly added columns default behavior for existing records
+    Given a dataset with existing records
+    When "NOT_OPENED_EMAIL" and "TIMESTAMP" columns are added
+    Then ensure default value is assigned based on current logic for all rows
+
+  Scenario: Ensure new columns are in the intended dataset or table
+    Given the new columns need to be added to a specific dataset
+    When the modification is applied
+    Then verify that "NOT_OPENED_EMAIL" and "TIMESTAMP" columns are added correctly in the specified dataset
