@@ -1,0 +1,34 @@
+Feature: Inventory Transaction table logic development
+
+  Scenario: Validate uniqueness of txn_id in f_inv_movmnt table
+    Given the f_inv_movmnt table is populated with inventory transactions
+    When a new transaction is inserted into f_inv_movmnt
+    Then each txn_id should be unique
+    And no duplicate txn_id should exist in the table
+
+  Scenario: Handling NULL values in f_inv_movmnt table
+    Given the f_inv_movmnt table definitions with default values for fields
+    When a transaction has a NULL value for a field with a default value
+    Then the default value should be used instead of NULL in the f_inv_movmnt table
+
+  Scenario: Ensure consistent use of expired date field naming
+    Given the scripts and table creation logic for the f_inv_movmnt table
+    When referencing the expiration field
+    Then the field should be consistently referred to as expired_dt
+
+  Scenario: Clear join conditions for VBAX and parl tables
+    Given the SQL logic for joining VBAX and parl tables
+    When executing the logic to populate f_inv_movmnt
+    Then a clear join condition should be specified to ensure correct data relationships
+
+  Scenario: Managing error cases during SQL execution
+    Given the process for SQL logic execution between Redshift and Databricks
+    When an error occurs during SQL execution or data migration
+    Then an error handling mechanism should log the error for debugging
+    And notify the appropriate team for resolution
+
+  Scenario: Transaction logging and monitoring for auditing
+    Given the execution of SQL logic for inventory transactions
+    When transactions are processed in the system
+    Then logging should be enabled to track changes
+    And monitoring tools should be set up for auditing purposes
