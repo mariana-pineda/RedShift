@@ -1,0 +1,32 @@
+Feature: Calculate Allocated Quantity in Inventory Management
+
+  Background:
+    Given a database containing tables "f_order" and "f_inv_movmnt"
+
+  Scenario: Calculate Allocated Quantity
+    Given "f_order" contains columns "order_nbr", "order_line_nbr", "primary_qty", "open_qty", "shipped_qty", "cancel_qty"
+    And "f_inv_movmnt" is the primary table in the calculation
+    When I execute the SQL logic to calculate "allocated_qty"
+    Then "allocated_qty" should be the sum of "primary_qty", "open_qty", "shipped_qty", and "cancel_qty" where "order_nbr" and "order_line_nbr" exist in "f_order"
+    And any null values in "primary_qty", "open_qty", "shipped_qty", "cancel_qty" should be treated as zero
+
+  Scenario: Handle Null Values in Quantity Columns
+    Given a record in "f_order" with null values in any of the quantity columns
+    When I execute the SQL logic
+    Then null values should be treated as zero in the calculation of "allocated_qty"
+
+  Scenario: Relationship Consideration Between Tables
+    Given there is a relationship between "f_order" and "f_inv_movmnt"
+    And join conditions or keys are defined between the tables
+    When the SQL logic is executed
+    Then the relationship should be considered in the calculation of "allocated_qty"
+
+  Scenario: Integration Considerations for Existing Systems
+    Given the SQL logic needs to be integrated into an existing system
+    When the system executes the logic
+    Then it should correctly calculate and use "allocated_qty" within the workflow
+
+  Scenario: Performance Constraints
+    Given the system requires performance goals or constraints for executing the SQL logic
+    When the logic is executed over large datasets
+    Then it should meet specified performance constraints without causing delays
