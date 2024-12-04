@@ -1,0 +1,22 @@
+Feature: Extract Product Size from Product Description
+
+  Scenario: Extract product size from product description
+    Given a product description in the file "product_desc_new.csv"
+    When I attempt to extract the product size from the product description
+    Then I should be able to identify the product size
+
+  Scenario: Use product ID when product size cannot be extracted
+    Given a product description in the file "product_desc_new.csv"
+    And the product size cannot be extracted from the product description
+    When I use the product ID as a fallback
+    Then the product ID should be used to determine the product size
+
+  Scenario: Handle multiple product sizes in a single product description
+    Given a product description in the file "product_desc_new.csv"
+    When there are multiple product sizes in a single product description
+    Then all product sizes should be extracted and handled appropriately
+
+  Scenario: Store or display extracted product size
+    Given a product size extracted from the product description
+    When the extraction is successful
+    Then the product size should be stored or displayed in the expected format
