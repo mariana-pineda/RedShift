@@ -1,26 +1,30 @@
 Feature: Inventory Transaction Table Logic
 
-  Scenario: Generate SQL-based logic for Inventory Transaction Table
+  Scenario: Develop SQL-based logic for Inventory Transaction table
     Given the field mappings are provided in the attached Excel file
-    When I develop SQL-based logic for the Inventory Transaction table (f_inv_movmnt)
-    Then the logic should map each field in the target table from the corresponding source tables
+    When I access the source tables as per the field mappings
+    Then I should transform the data according to the mappings
+    And I should load the transformed data into the f_inv_movmnt table
 
   Scenario: Handle data type discrepancies
-    Given potential discrepancies between source and target data types or formats
-    When developing the SQL-based logic
-    Then ensure data type conversions are handled appropriately
+    Given the source and target data types may differ
+    When I transform the data
+    Then I should ensure data type compatibility between source and target
 
-  Scenario: Error and exception handling
-    Given the data import/export process
-    When an error or exception occurs
-    Then the process should handle errors gracefully and log the exceptions
+  Scenario: Error handling during data import/export
+    Given the possibility of errors during data import/export
+    When an error occurs
+    Then I should log the error
+    And I should notify the relevant stakeholders
 
-  Scenario: Validate data transformation and loading
-    Given the data transformation and loading process
-    When the SQL-based logic is executed
-    Then validate the correctness of the data transformation and loading
+  Scenario: Validate data transformation and loading process
+    Given the need to validate data correctness
+    When the data is transformed and loaded
+    Then I should verify the data against the field mappings
+    And I should ensure data integrity in the f_inv_movmnt table
 
   Scenario: Schedule for running SQL-based logic
-    Given the requirement to run the SQL-based logic
-    When determining the frequency or schedule
-    Then establish a schedule for running the SQL-based logic as needed
+    Given the lack of specified frequency for running the logic
+    When the SQL-based logic is developed
+    Then I should define a schedule for executing the logic
+    And I should ensure it aligns with business requirements
