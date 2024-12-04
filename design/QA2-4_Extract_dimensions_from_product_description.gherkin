@@ -1,31 +1,42 @@
-Feature: Extract product size from product description
+Feature: Extract Product Size from Product Description
 
   Background:
-    Given a sample file "product_desc (1).csv" is available as input
+    Given a pipeline code to process product descriptions
 
-  Scenario Outline: Extract product size when available in description
-    Given the product description "<product_description>"
-    When I attempt to extract the product size
-    Then the extracted product size should be "<product_size>"
+  Scenario Outline: Extract product size from product description
+    Given a product description "<product_description>"
+    And a product ID "<product_id>"
+    When the extraction process is initiated
+    Then the product size is extracted as "<expected_product_size>"
+    And if extraction from product description fails, the product size defaults to product ID "<product_id>"
 
-    Examples:
-      | product_description                     | product_size |
-      | "The table measures 6ft x 4ft x 3ft."   | "6ft x 4ft x 3ft" |
-      | "The chair is 40 inches by 20 inches."  | "40 inches by 20 inches" |
-      | "Compact device."                       | "" | # Unable to extract
+  Examples:
+    | product_description                             | product_id | expected_product_size |
+    | "This product has dimensions 12x10x5 inches"    | 12345      | 12x10x5 inches         |
+    | "Size: Large; Dimensions: 8x6x4 cm"             | 67890      | 8x6x4 cm               |
+    | "Dimensions are not specified"                 | 54321      | 54321                  |
+    | "A fantastic product"                           | 99999      | 99999                  |
 
-  Scenario: Use product ID when product size cannot be extracted
-    Given the product description "Compact device." 
-    And the product ID is "12345"
-    When I am unable to extract the product size
-    Then I should consider using the product ID "12345"
+  Scenario: Handling errors and exceptions
+    Given a product description "A product with incomplete data"
+    And a product ID "88888"
+    When the extraction process is initiated
+    Then log an error message "Failed to extract product size from product description and product ID."
 
-  Scenario: Handle description with no explicit size information
-    Given the product description "This is a versatile item that fits many spaces."
-    When I attempt to extract the product size
-    Then the extracted product size should be ""
+  Scenario: Validate extracted product size
+    Given an extracted product size "<extracted_size>"
+    And validation rules require size format "<expected_format>"
+    When the validation process is initiated
+    Then the extracted product size "<extracted_size>" matches the expected format "<expected_format>"
 
-  Scenario: Extract product size with unstructured pattern
-    Given the product description "Dimensions: height 100cm, width 50cm, depth 25cm"
-    When I attempt to extract the product size
-    Then the extracted product size should be "height 100cm, width 50cm, depth 25cm"
+  Examples:
+    | extracted_size | expected_format   |
+    | 12x10x5 inches | "dimension format"|
+    | 8x4x2 cm       | "dimension format"|
+    | Large          | "size label"      |
+
+  Scenario: Processing extracted product size
+    Given a successfully extracted product size "15x12x10 cm"
+    When further processing is required
+    Then store the extracted product size in the product database
+    And display the product size on the product details page
