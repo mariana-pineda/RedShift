@@ -14,5 +14,4 @@ CREATE TABLE purgo_playground.event_log (
   sharelocalpath STRING,
   accesslist STRING,
   objectname STRING
-)
-
+) USING delta
