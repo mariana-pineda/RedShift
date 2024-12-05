@@ -1,0 +1,18 @@
+Feature: Extract product size from product description
+
+  Background:
+    Given a sample file with product descriptions and product IDs
+
+  Scenario Outline: Extract product size from product description
+    Given a product description "<product_description>"
+    And a product ID "<product_id>"
+    When I attempt to extract the product size
+    Then the extracted product size should be "<expected_product_size>"
+
+  Examples:
+    | product_description                          | product_id | expected_product_size |
+    | "This is a large product with dimensions 10x20x30 cm" | 12345      | 10x20x30 cm           |
+    | "Compact item, size: 5x5x5 inches"           | 67890      | 5x5x5 inches           |
+    | "No size information available"              | 11223      | 11223                  |
+    | "Dimensions: 15x25x35 mm"                    | 44556      | 15x25x35 mm            |
+    | "Product with no clear size"                 | 77889      | 77889                  |
