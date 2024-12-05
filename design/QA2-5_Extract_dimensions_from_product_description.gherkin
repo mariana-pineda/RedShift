@@ -1,18 +1,35 @@
-Feature: Extract product size from product description
+Feature: Extract Product Size from Product Description
 
   Background:
     Given a sample file with product descriptions and product IDs
 
-  Scenario Outline: Extract product size from product description
-    Given a product description "<product_description>"
-    And a product ID "<product_id>"
-    When I attempt to extract the product size
-    Then the extracted product size should be "<expected_product_size>"
+  Scenario: Successfully extract product size from product description
+    Given a product description containing product size information
+    When the pipeline processes the product description
+    Then the product size should be extracted
+    And a timestamp should be added to the output
 
-  Examples:
-    | product_description                          | product_id | expected_product_size |
-    | "This is a large product with dimensions 10x20x30 cm" | 12345      | 10x20x30 cm           |
-    | "Compact item, size: 5x5x5 inches"           | 67890      | 5x5x5 inches           |
-    | "No size information available"              | 11223      | 11223                  |
-    | "Dimensions: 15x25x35 mm"                    | 44556      | 15x25x35 mm            |
-    | "Product with no clear size"                 | 77889      | 77889                  |
+  Scenario: Extract product size using product ID when size is not in description
+    Given a product description without product size information
+    And a valid product ID is available
+    When the pipeline processes the product description
+    Then the product size should be extracted using the product ID
+    And a timestamp should be added to the output
+
+  Scenario: Handle missing product size and product ID
+    Given a product description without product size information
+    And no valid product ID is available
+    When the pipeline processes the product description
+    Then the product size should not be extracted
+    And a timestamp should be added to the output
+
+  Scenario: Add timestamp to the output
+    Given a product description with or without product size information
+    When the pipeline processes the product description
+    Then a timestamp should be added to the output
+
+  Scenario: Handle multiple product sizes in a single description
+    Given a product description containing multiple product size values
+    When the pipeline processes the product description
+    Then the first product size should be extracted
+    And a timestamp should be added to the output
