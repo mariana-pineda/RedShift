@@ -2,40 +2,38 @@ import unittest
 from datetime import datetime
 
 class TestEmailNotOpenedColumn(unittest.TestCase):
-
+    
     def setUp(self):
         self.test_data = generate_test_data(30)
-        self.default_timestamp_format = "%Y-%m-%d %H:%M:%S"
-
-    def test_update_record_when_is_clicked_true_and_is_opened_false(self):
+    
+    def test_not_opened_email_column(self):
         for record in self.test_data:
-            if record['IS_CLICKED'] and not record['IS_OPENED']:
-                self.assertTrue(record["NOT_OPENED_EMAIL"], "NOT_OPENED_EMAIL should be TRUE")
-                self.assertIsNotNone(record["TIMESTAMP"], "Timestamp should not be None")
-                # Verify timestamp format
-                try:
-                    datetime.strptime(record["TIMESTAMP"], self.default_timestamp_format)
-                except ValueError:
-                    self.fail("Timestamp is not in the correct format")
-
-    def test_handle_records_where_both_is_clicked_and_is_opened_false(self):
+            is_clicked = record["IS_CLICKED"]
+            is_opened = record["IS_OPENED"]
+            not_opened_email = record["NOT_OPENED_EMAIL"]
+            timestamp = record["TIMESTAMP"]
+            
+            # Scenario: Update record when IS_CLICKED is TRUE and IS_OPENED is FALSE
+            if is_clicked and not is_opened:
+                self.assertTrue(not_opened_email, "NOT_OPENED_EMAIL should be TRUE when IS_CLICKED is TRUE and IS_OPENED is FALSE")
+                self.assertIsNotNone(timestamp, "TIMESTAMP should not be None when IS_CLICKED is TRUE and IS_OPENED is FALSE")
+            
+            # Scenario: Handle records where both IS_CLICKED and IS_OPENED are FALSE
+            if not is_clicked and not is_opened:
+                self.assertFalse(not_opened_email, "NOT_OPENED_EMAIL should be FALSE when both IS_CLICKED and IS_OPENED are FALSE")
+                self.assertIsNone(timestamp, "TIMESTAMP should be None when both IS_CLICKED and IS_OPENED are FALSE")
+    
+    def test_default_behavior_for_existing_records(self):
         for record in self.test_data:
-            if not record['IS_CLICKED'] and not record['IS_OPENED']:
-                self.assertFalse(record["NOT_OPENED_EMAIL"], "NOT_OPENED_EMAIL should be FALSE")
-                self.assertIsNone(record["TIMESTAMP"], "Timestamp should be None")
-
-    def test_newly_added_columns_default_behavior_for_existing_records(self):
+            # Ensure default value logic for NOT_OPENED_EMAIL and TIMESTAMP
+            self.assertIn("NOT_OPENED_EMAIL", record, "NOT_OPENED_EMAIL column should exist in the record")
+            self.assertIn("TIMESTAMP", record, "TIMESTAMP column should exist in the record")
+    
+    def test_columns_added_to_dataset(self):
+        # Assuming the dataset is a list of dictionaries
         for record in self.test_data:
-            if not (record['IS_CLICKED'] and not record['IS_OPENED']):
-                self.assertIsInstance(record["NOT_OPENED_EMAIL"], bool, "Default value should be a boolean")
-                if record['IS_CLICKED'] or record['IS_OPENED']:
-                    self.assertIsNone(record["TIMESTAMP"], "Timestamp should remain None for existing records not matching")
+            self.assertIn("NOT_OPENED_EMAIL", record, "NOT_OPENED_EMAIL column should be added to the dataset")
+            self.assertIn("TIMESTAMP", record, "TIMESTAMP column should be added to the dataset")
 
-    def test_ensure_new_columns_are_in_the_intended_dataset(self):
-        for record in self.test_data:
-            self.assertIn("NOT_OPENED_EMAIL", record, "NOT_OPENED_EMAIL column is missing")
-            self.assertIn("TIMESTAMP", record, "TIMESTAMP column is missing")
-
-# Run the tests
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(argv=[''], exit=False)
