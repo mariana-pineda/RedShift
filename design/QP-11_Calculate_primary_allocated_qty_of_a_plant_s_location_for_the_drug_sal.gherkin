@@ -1,13 +1,29 @@
 Feature: Calculate Allocated Quantity in Inventory Stock Management
 
-  Scenario: Calculate allocated_qty for orders in f_order table
-    Given the f_inv_movmnt table is the primary source of inventory movement data
-    And the f_order table contains order_nbr and order_line_nbr entries
-    When I calculate the allocated_qty for each order
+  Scenario: Calculate allocated_qty for specific orders
+    Given the f_inv_movmnt table is the primary table
+    And the f_order table contains order_nbr and order_line_nbr
+    When I calculate the allocated_qty
     Then the allocated_qty should be the sum of primary_qty, open_qty, shipped_qty, and cancel_qty
     And null values in any of these columns should be treated as zero
-    And the calculated allocated_qty should be available for reporting purposes
-    And no specific conditions or filters are applied unless specified
-    And potential duplicates in f_order based on order_nbr and order_line_nbr should be handled appropriately
-    And performance considerations should be taken into account for the SQL logic
-    And the correctness of the calculated allocated_qty should be validated
+    And the calculated allocated_qty should be used for reporting purposes
+
+  Scenario: Handle null values in quantity columns
+    Given the f_order table has entries with null values in primary_qty, open_qty, shipped_qty, or cancel_qty
+    When I calculate the allocated_qty
+    Then null values should be treated as zero in the calculation
+
+  Scenario: Ensure no duplicates in f_order table
+    Given the f_order table may have duplicate entries based on order_nbr and order_line_nbr
+    When I calculate the allocated_qty
+    Then duplicates should be handled to ensure accurate calculation
+
+  Scenario: Validate calculated allocated_qty
+    Given the calculated allocated_qty
+    When I validate the correctness of the calculation
+    Then the allocated_qty should match the expected sum of primary_qty, open_qty, shipped_qty, and cancel_qty
+
+  Scenario: Performance considerations for SQL logic
+    Given the SQL logic for calculating allocated_qty
+    When I execute the SQL logic
+    Then it should perform efficiently without exceeding resource usage constraints
