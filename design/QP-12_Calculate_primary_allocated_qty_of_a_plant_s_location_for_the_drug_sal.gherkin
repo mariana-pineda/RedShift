@@ -1,0 +1,13 @@
+Feature: Calculate Allocated Quantity in Inventory Stock Management
+
+  Scenario: Calculate allocated_qty for orders in f_order table
+    Given the f_inv_movmnt table is the primary source of data
+    And the f_order table contains order_nbr and order_line_nbr entries
+    When I calculate the allocated_qty
+    Then the allocated_qty should be the sum of primary_qty, open_qty, shipped_qty, and cancel_qty
+    And null values in any of these columns should be treated as zero
+    And the calculation should be used for reporting purposes only
+    And no specific conditions or filters are applied unless specified
+    And all orders, including active, canceled, or returned, are considered
+    And duplicate entries for the same order_nbr and order_line_nbr should be handled appropriately
+    And performance considerations should be taken into account for large datasets
