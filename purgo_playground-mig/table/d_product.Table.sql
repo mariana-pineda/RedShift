@@ -17,3 +17,4 @@ CREATE TABLE purgo_playground.d_product (
     crt_dt TIMESTAMP, 
     updt_dt TIMESTAMP
 )
+
