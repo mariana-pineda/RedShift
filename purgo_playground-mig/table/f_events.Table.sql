@@ -27,6 +27,4 @@ CREATE TABLE purgo_playground.f_events (
   navigation_item_name STRING, 
   content_name STRING, 
   engagement_time BIGINT
-)
-USING DELTA
-
+) USING DELTA;
