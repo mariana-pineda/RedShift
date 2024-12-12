@@ -39,17 +39,19 @@ with mlflow.start_run():
     y_pred_validate = model.predict(X_validate)
     validation_accuracy = accuracy_score(y_validate, y_pred_validate)
     
+    # Log validation accuracy
+    mlflow.log_metric("validation_accuracy", validation_accuracy)
+    
     # Test the model
     X_test = test_data.drop('high_quality', axis=1)
     y_test = test_data['high_quality']
     y_pred_test = model.predict(X_test)
     test_accuracy = accuracy_score(y_test, y_pred_test)
     
-    # Log metrics
-    mlflow.log_metric("validation_accuracy", validation_accuracy)
+    # Log test accuracy
     mlflow.log_metric("test_accuracy", test_accuracy)
     
-    # Log model
+    # Log the model
     mlflow.sklearn.log_model(model, "random_forest_model")
 
 # Print results
