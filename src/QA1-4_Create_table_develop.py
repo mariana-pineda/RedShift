@@ -16,4 +16,4 @@ if 'lastdate' not in [col.name for col in employees.columns]:
 # Add categoryGroup column to customers table
 if 'categoryGroup' not in [col.name for col in customers.columns]:
     with engine.connect() as conn:
-        conn.execute('ALTER TABLE customers ADD COLUMN categoryGroup STRING DEFAULT "A"')
+        conn.execute('ALTER TABLE customers ADD COLUMN categoryGroup STRING DEFAULT "Uncategorized"')
