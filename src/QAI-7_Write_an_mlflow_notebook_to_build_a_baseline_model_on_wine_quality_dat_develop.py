@@ -1,6 +1,5 @@
 # Databricks notebook source
 import pandas as pd
-import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import mlflow
@@ -20,33 +19,30 @@ remaining_data = data.drop(train_data.index)
 validation_data = remaining_data.sample(frac=0.5, random_state=42)
 test_data = remaining_data.drop(validation_data.index)
 
-# Separate features and target
+# Prepare features and labels
 X_train = train_data.drop('high_quality', axis=1)
 y_train = train_data['high_quality']
-X_validation = validation_data.drop('high_quality', axis=1)
-y_validation = validation_data['high_quality']
+X_val = validation_data.drop('high_quality', axis=1)
+y_val = validation_data['high_quality']
 X_test = test_data.drop('high_quality', axis=1)
 y_test = test_data['high_quality']
 
-# Train a Random Forest model
+# Train the Random Forest Model
 rf_model = RandomForestClassifier(random_state=42)
 rf_model.fit(X_train, y_train)
 
-# Evaluate the model on the validation set
-y_val_pred = rf_model.predict(X_validation)
-validation_accuracy = accuracy_score(y_validation, y_val_pred)
+# Validate the model
+val_predictions = rf_model.predict(X_val)
+val_accuracy = accuracy_score(y_val, val_predictions)
 
-# Log the experiment in MLflow
+# Test the model
+test_predictions = rf_model.predict(X_test)
+test_accuracy = accuracy_score(y_test, test_predictions)
+
+# Log the experiment
 mlflow.set_experiment("/Workspace/Shared/purgo_poc/winequality-experiement")
 with mlflow.start_run():
-    mlflow.log_param("model_type", "RandomForestClassifier")
-    mlflow.log_metric("validation_accuracy", validation_accuracy)
-    mlflow.sklearn.log_model(rf_model, "random_forest_model")
-
-# Test the model on the test set
-y_test_pred = rf_model.predict(X_test)
-test_accuracy = accuracy_score(y_test, y_test_pred)
-
-# Log test accuracy
-with mlflow.start_run():
+    mlflow.log_param("random_state", 42)
+    mlflow.log_metric("validation_accuracy", val_accuracy)
     mlflow.log_metric("test_accuracy", test_accuracy)
+    mlflow.sklearn.log_model(rf_model, "random_forest_model")
