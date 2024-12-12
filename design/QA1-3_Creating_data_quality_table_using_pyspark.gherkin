@@ -1,0 +1,31 @@
+Feature: Data Quality Validation for d_product_revenue Table
+
+  Background:
+    Given the agilisium_playground.purgo_playground.d_product_revenue table exists
+
+  Scenario: Validate Column Names
+    When the column names of the agilisium_playground.purgo_playground.d_product_revenue table are checked
+    Then the column names should match the expected list:
+      | product_id                      |
+      | product_name                    |
+      | product_type                    |
+      | revenue                         |
+      | country                         |
+      | customer_id                     |
+      | purchased_date                  |
+      | invoice_date                    |
+      | invoice_number                  |
+      | is_returned                     |
+      | customer_satisfaction_score     |
+      | product_details                 |
+    And the result should be logged in the DQ table with check_name "Column Name Validation" and dq_result "Pass" or "Fail"
+
+  Scenario: Check for Negative Revenue Values
+    When the revenue column in the agilisium_playground.purgo_playground.d_product_revenue table is checked for negative values
+    Then there should be no negative values
+    And the result should be logged in the DQ table with check_name "Revenue Value Check" and dq_result "Pass" or "Fail"
+
+  Scenario: Validate Decimal Precision for Revenue
+    When the revenue column in the agilisium_playground.purgo_playground.d_product_revenue table is checked for decimal precision
+    Then all values should have exactly two decimal places
+    And the result should be logged in the DQ table with check_name "Decimal Precision Check" and dq_result "Pass" or "Fail"
