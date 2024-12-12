@@ -1,0 +1,11 @@
+Feature: Add columns to database tables
+
+  Scenario: Add lastdate column to employees table
+    Given a database with an employees table
+    When I add a column named "lastdate" to the employees table
+    Then the employees table should have a column named "lastdate"
+
+  Scenario: Add categoryGroup column to customers table
+    Given a database with a customers table
+    When I add a column named "categoryGroup" to the customers table
+    Then the customers table should have a column named "categoryGroup"
