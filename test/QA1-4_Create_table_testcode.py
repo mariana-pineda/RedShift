@@ -1,71 +1,65 @@
 import unittest
-import sqlite3
+import datetime
+from sqlalchemy import create_engine, inspect, MetaData, Table, Column, Date, String
 
 class TestDatabaseSchema(unittest.TestCase):
 
     def setUp(self):
-        # Set up an in-memory SQLite database for testing
-        self.connection = sqlite3.connect(':memory:')
-        self.cursor = self.connection.cursor()
-        
-        # Create employees and customers tables
-        self.cursor.execute('''
-            CREATE TABLE employees (
-                employee_id INTEGER PRIMARY KEY,
-                lastdate DATE
-            )
-        ''')
-        self.cursor.execute('''
-            CREATE TABLE customers (
-                customer_id INTEGER PRIMARY KEY,
-                categoryGroup TEXT
-            )
-        ''')
-        self.connection.commit()
+        # Setup in-memory SQLite database for testing
+        self.engine = create_engine('sqlite:///:memory:')
+        self.metadata = MetaData()
 
-    def tearDown(self):
-        # Close the database connection after each test
-        self.connection.close()
+        # Create employees table without lastdate column
+        self.employees = Table('employees', self.metadata,
+                               Column('employee_id', String, primary_key=True))
+        self.metadata.create_all(self.engine)
 
-    def test_employees_table_has_lastdate_column(self):
-        # Check if the lastdate column exists in the employees table
-        self.cursor.execute("PRAGMA table_info(employees)")
-        columns = [column[1] for column in self.cursor.fetchall()]
-        self.assertIn('lastdate', columns, "lastdate column is missing in employees table")
+        # Create customers table without categoryGroup column
+        self.customers = Table('customers', self.metadata,
+                               Column('customer_id', String, primary_key=True))
+        self.metadata.create_all(self.engine)
 
-    def test_customers_table_has_categoryGroup_column(self):
-        # Check if the categoryGroup column exists in the customers table
-        self.cursor.execute("PRAGMA table_info(customers)")
-        columns = [column[1] for column in self.cursor.fetchall()]
-        self.assertIn('categoryGroup', columns, "categoryGroup column is missing in customers table")
+    def test_add_lastdate_column_to_employees(self):
+        # Add lastdate column to employees table
+        with self.engine.connect() as conn:
+            conn.execute('ALTER TABLE employees ADD COLUMN lastdate DATE DEFAULT "2023-01-01"')
 
-    def test_employees_data_insertion(self):
-        # Insert test data into employees table and validate
-        employees_test_data = generate_employees_data(25)
-        for record in employees_test_data:
-            self.cursor.execute('''
-                INSERT INTO employees (employee_id, lastdate) VALUES (?, ?)
-            ''', (record['employee_id'], record['lastdate']))
-        self.connection.commit()
+        # Verify lastdate column is added
+        inspector = inspect(self.engine)
+        columns = inspector.get_columns('employees')
+        column_names = [column['name'] for column in columns]
+        self.assertIn('lastdate', column_names)
 
-        # Validate data insertion
-        self.cursor.execute("SELECT * FROM employees")
-        rows = self.cursor.fetchall()
-        self.assertEqual(len(rows), 25, "Not all employees test data were inserted")
+        # Verify data type of lastdate column
+        lastdate_column = next(column for column in columns if column['name'] == 'lastdate')
+        self.assertEqual(lastdate_column['type'].__class__, Date)
 
-    def test_customers_data_insertion(self):
-        # Insert test data into customers table and validate
-        customers_test_data = generate_customers_data(25)
-        for record in customers_test_data:
-            self.cursor.execute('''
-                INSERT INTO customers (customer_id, categoryGroup) VALUES (?, ?)
-            ''', (record['customer_id'], record['categoryGroup']))
-        self.connection.commit()
+        # Verify default value for existing records
+        with self.engine.connect() as conn:
+            conn.execute('INSERT INTO employees (employee_id) VALUES ("1")')
+            result = conn.execute('SELECT lastdate FROM employees WHERE employee_id = "1"').fetchone()
+            self.assertEqual(result['lastdate'], datetime.date(2023, 1, 1))
 
-        # Validate data insertion
-        self.cursor.execute("SELECT * FROM customers")
-        rows = self.cursor.fetchall()
-        self.assertEqual(len(rows), 25, "Not all customers test data were inserted")
+    def test_add_categoryGroup_column_to_customers(self):
+        # Add categoryGroup column to customers table
+        with self.engine.connect() as conn:
+            conn.execute('ALTER TABLE customers ADD COLUMN categoryGroup STRING DEFAULT "A"')
+
+        # Verify categoryGroup column is added
+        inspector = inspect(self.engine)
+        columns = inspector.get_columns('customers')
+        column_names = [column['name'] for column in columns]
+        self.assertIn('categoryGroup', column_names)
+
+        # Verify data type of categoryGroup column
+        categoryGroup_column = next(column for column in columns if column['name'] == 'categoryGroup')
+        self.assertEqual(categoryGroup_column['type'].__class__, String)
+
+        # Verify default value for existing records
+        with self.engine.connect() as conn:
+            conn.execute('INSERT INTO customers (customer_id) VALUES ("1")')
+            result = conn.execute('SELECT categoryGroup FROM customers WHERE customer_id = "1"').fetchone()
+            self.assertEqual(result['categoryGroup'], "A")
 
 if __name__ == '__main__':
     unittest.main()
