@@ -1,23 +1,19 @@
-import sqlite3
+from sqlalchemy import create_engine, MetaData, Table, Column, Date, String
 
-def add_columns_to_tables():
-    # Connect to the database (or create it if it doesn't exist)
-    connection = sqlite3.connect('example.db')
-    cursor = connection.cursor()
+# Connect to the database
+engine = create_engine('sqlite:///mydatabase.db')
+metadata = MetaData(bind=engine)
 
-    # Add lastdate column to employees table
-    cursor.execute('''
-        ALTER TABLE employees ADD COLUMN lastdate DATE
-    ''')
+# Reflect existing tables
+employees = Table('employees', metadata, autoload_with=engine)
+customers = Table('customers', metadata, autoload_with=engine)
 
-    # Add categoryGroup column to customers table
-    cursor.execute('''
-        ALTER TABLE customers ADD COLUMN categoryGroup TEXT
-    ''')
+# Add lastdate column to employees table
+if 'lastdate' not in [col.name for col in employees.columns]:
+    with engine.connect() as conn:
+        conn.execute('ALTER TABLE employees ADD COLUMN lastdate DATE DEFAULT "2023-01-01"')
 
-    # Commit the changes and close the connection
-    connection.commit()
-    connection.close()
-
-# Call the function to add columns to the tables
-add_columns_to_tables()
+# Add categoryGroup column to customers table
+if 'categoryGroup' not in [col.name for col in customers.columns]:
+    with engine.connect() as conn:
+        conn.execute('ALTER TABLE customers ADD COLUMN categoryGroup STRING DEFAULT "A"')
