@@ -1,15 +1,25 @@
 Feature: Update database schema to include new columns
 
-  Scenario: Add lastdate column to employees table
-    Given the employees table exists in the database
-    When I add a new column "lastdate" to the employees table
-    Then the "lastdate" column should be present in the employees table
-    And the data type for "lastdate" should be defined
-    And existing records in the employees table should have a default value for "lastdate"
+  Scenario: Add lastdate column to Employees table
+    Given the Employees table exists
+    When I add a column named "lastdate" to the Employees table
+    Then the "lastdate" column should be of type "TIMESTAMP"
+    And the "lastdate" column should default to the current date for new records
 
-  Scenario: Add categoryGroup column to customers table
-    Given the customers table exists in the database
-    When I add a new column "categoryGroup" to the customers table
-    Then the "categoryGroup" column should be present in the customers table
-    And the data type for "categoryGroup" should be defined
-    And existing records in the customers table should have a default value for "categoryGroup"
+  Scenario: Add categoryGroup column to Customers table
+    Given the Customers table exists
+    When I add a column named "categoryGroup" to the Customers table
+    Then the "categoryGroup" column should be of type "VARCHAR"
+    And the "categoryGroup" column should have a maximum length of 255 characters
+    And the "categoryGroup" column should only allow predefined categories
+
+  Scenario: Validate impact on existing database objects
+    Given the database contains stored procedures, views, and other objects
+    When I add the "lastdate" column to the Employees table
+    And I add the "categoryGroup" column to the Customers table
+    Then all existing stored procedures, views, and other objects should function correctly
+
+  Scenario: Apply changes to all environments
+    Given the database changes are ready to be deployed
+    When I apply the changes
+    Then the changes should be applied to development, testing, and production environments
