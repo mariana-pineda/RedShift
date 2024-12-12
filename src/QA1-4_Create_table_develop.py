@@ -1,18 +1,19 @@
 from sqlalchemy import create_engine, MetaData, Table, Column, Date, String
 
-# Create an engine for the database
-engine = create_engine('sqlite:///example.db')
-metadata = MetaData()
+# Connect to the database
+engine = create_engine('sqlite:///your_database.db')
+metadata = MetaData(bind=engine)
 
-# Define the employees table with the new lastdate column
-employees = Table('employees', metadata,
-                  Column('employee_id', String, primary_key=True),
-                  Column('lastdate', Date, default='2023-01-01'))
+# Reflect the existing employees table
+employees = Table('employees', metadata, autoload_with=engine)
 
-# Define the customers table with the new categoryGroup column
-customers = Table('customers', metadata,
-                  Column('customer_id', String, primary_key=True),
-                  Column('categoryGroup', String, default='Uncategorized'))
+# Add lastdate column to employees table
+with engine.connect() as conn:
+    conn.execute('ALTER TABLE employees ADD COLUMN lastdate DATE DEFAULT "2023-01-01"')
 
-# Create the tables in the database
-metadata.create_all(engine)
+# Reflect the existing customers table
+customers = Table('customers', metadata, autoload_with=engine)
+
+# Add categoryGroup column to customers table
+with engine.connect() as conn:
+    conn.execute('ALTER TABLE customers ADD COLUMN categoryGroup STRING DEFAULT "Uncategorized"')
