@@ -1,0 +1,41 @@
+Feature: Data Quality Checks for Tepezza Sales Data
+
+  Background:
+    Given the sales data for Tepezza is available
+    And the data quality rules are defined in the attached Excel file
+
+  Scenario: Validate completeness of sales data
+    When the data quality check is executed
+    Then all required fields should be present in each record
+    And any missing fields should be reported
+
+  Scenario: Validate accuracy of sales data
+    When the data quality check is executed
+    Then all fields should match the expected data types and formats
+    And any discrepancies should be reported
+
+  Scenario: Validate consistency of sales data
+    When the data quality check is executed
+    Then all records should adhere to the defined business rules
+    And any inconsistencies should be reported
+
+  Scenario: Handle records failing data quality checks
+    When a record fails a data quality check
+    Then it should be flagged for review
+    And the issue should be logged for further investigation
+
+  Scenario: Schedule for running data quality checks
+    Given the need for regular data quality checks
+    When the schedule is defined
+    Then the checks should run at the specified intervals
+
+  Scenario: Logging and alerting for data quality issues
+    When a data quality issue is detected
+    Then it should be logged
+    And an alert should be sent to the responsible team
+
+  Scenario: Updating data quality rules
+    Given the data quality rules may change
+    When a rule is updated
+    Then the system should accommodate the new rule
+    And ensure all future checks use the updated rule
