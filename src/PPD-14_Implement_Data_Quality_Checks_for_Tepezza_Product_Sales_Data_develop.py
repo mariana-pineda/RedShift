@@ -86,8 +86,3 @@ failed_records_count = failed_records.count()
 if failed_records_count > 0:
     print(f"Data quality issues detected: {failed_records_count} records failed checks.")
     # Here you would implement logging and alerting mechanisms
-
-# Update data quality rules
-# This part would involve reloading or modifying the rules and re-running the checks
-# For demonstration, assume rules are updated and checks are re-executed
-# Re-run the checks after updating rules
