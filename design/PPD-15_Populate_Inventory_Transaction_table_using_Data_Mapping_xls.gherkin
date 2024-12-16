@@ -1,0 +1,32 @@
+Feature: Inventory Transaction Table SQL Logic
+
+  Scenario: Develop SQL logic for f_inv_movmnt table
+    Given the field mappings are provided in the attached Excel file
+    When the SQL logic is developed based on the field mappings
+    Then the f_inv_movmnt table should be populated with data from the source tables
+
+  Scenario: Handle errors during SQL logic execution
+    Given the SQL logic is executed
+    When an error occurs during execution
+    Then the error should be logged for further analysis
+
+  Scenario: Data discrepancies between Redshift and Databricks
+    Given data is sourced from both Redshift and Databricks
+    When there are discrepancies in data
+    Then the discrepancies should be identified and reported
+
+  Scenario: Testing and validation of SQL logic
+    Given the SQL logic is developed
+    When the logic is tested
+    Then the results should be validated against expected outcomes
+
+  Scenario: Schedule for running SQL logic
+    Given the SQL logic is developed
+    When the schedule for execution is determined
+    Then the SQL logic should run according to the defined schedule
+
+  Scenario: Output format and reporting requirements
+    Given the SQL logic is executed
+    When the execution is complete
+    Then the output should be formatted as per requirements
+    And the results should be reported accordingly
