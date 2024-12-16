@@ -46,3 +46,38 @@ with mlflow.start_run():
     mlflow.log_metric("validate_accuracy", validate_accuracy)
     mlflow.log_metric("test_accuracy", test_accuracy)
     mlflow.sklearn.log_model(rf_model, "model")
+
+# Validation code
+def validate_model(test_data_records):
+    for record in test_data_records:
+        features = {k: v for k, v in record.items() if k not in ['quality', 'high_quality']}
+        expected = record['high_quality']
+        actual = rf_model.predict(pd.DataFrame([features]))[0]
+        assert expected == actual, f"Expected {expected}, but got {actual} for record {record}"
+
+# Generate test data
+def generate_test_data():
+    test_data_records = []
+
+    # Condition: Quality > 6 (high_quality = True)
+    high_quality_data = data[data['quality'] > 6]
+    for _ in range(10):
+        record = high_quality_data.sample(n=1).to_dict(orient='records')[0]
+        test_data_records.append(record)
+
+    # Condition: Quality <= 6 (high_quality = False)
+    low_quality_data = data[data['quality'] <= 6]
+    for _ in range(10):
+        record = low_quality_data.sample(n=1).to_dict(orient='records')[0]
+        test_data_records.append(record)
+
+    # Additional random samples to ensure variety
+    for _ in range(10):
+        record = data.sample(n=1).to_dict(orient='records')[0]
+        test_data_records.append(record)
+
+    return test_data_records
+
+# Run validation
+test_data_records = generate_test_data()
+validate_model(test_data_records)
