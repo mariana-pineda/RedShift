@@ -21,4 +21,3 @@ CREATE TABLE purgo_playground.f_order (
   crt_dt TIMESTAMP, 
   updt_dt TIMESTAMP
 )
-USING DELTA;
