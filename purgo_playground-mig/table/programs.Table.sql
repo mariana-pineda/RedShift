@@ -4,4 +4,5 @@ CREATE TABLE purgo_playground.programs (
   program_name STRING NOT NULL, 
   country_code STRING NOT NULL, 
   program_start_date TIMESTAMP
-) USING DELTA;
+)
+USING DELTA;
