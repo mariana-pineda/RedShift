@@ -1,0 +1,35 @@
+Feature: Calculate Allocated Quantity in Inventory Stock Management
+
+  Background:
+    Given the primary table is "f_inv_movmnt"
+    And the target table is "f_order"
+
+  Scenario: Calculate allocated_qty for specific orders
+    Given "order_nbr" and "order_line_nbr" have entries in the "f_order" table
+    When I sum the "primary_qty", "open_qty", "shipped_qty", and "cancel_qty" columns
+    Then I should calculate the "allocated_qty" for each order
+
+  Scenario: Validate presence of order numbers
+    Given the "f_order" table
+    When checking for "order_nbr" and "order_line_nbr"
+    Then ensure they are present and valid
+
+  Scenario: Handle null values in calculation
+    Given the "f_order" table may contain null values
+    When calculating "allocated_qty"
+    Then handle null values appropriately to ensure accurate results
+
+  Scenario: Validate correctness of allocated_qty calculation
+    Given the calculated "allocated_qty"
+    When comparing with expected results
+    Then ensure the calculation is correct and aligns with business rules
+
+  Scenario: Performance considerations for large datasets
+    Given a large dataset in the "f_order" table
+    When executing the SQL logic
+    Then optimize queries to improve performance
+
+  Scenario: Document SQL logic and assumptions
+    Given the SQL logic for calculating "allocated_qty"
+    When documenting the process
+    Then include assumptions, business rules, and potential limitations
