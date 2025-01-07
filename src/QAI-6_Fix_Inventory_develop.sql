@@ -1,9 +1,7 @@
--- SQL code to alter the employees and customers tables
+-- SQL code to add lastdate to employees table
+ALTER TABLE employees
+ADD COLUMN lastdate DATE;
 
--- Add lastdate column to qa.employees table
-ALTER TABLE qa.employees
-ADD COLUMN lastdate TIMESTAMP NULL;
-
--- Add categoryGroup column to qa.customers table
-ALTER TABLE qa.customers
-ADD COLUMN categoryGroup VARCHAR(255) NULL;
+-- SQL code to add categoryGroup to customers table
+ALTER TABLE customers
+ADD COLUMN categoryGroup VARCHAR(255);
