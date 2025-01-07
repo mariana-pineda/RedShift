@@ -1,19 +1,15 @@
-Feature: Update Employees and Customers Tables
-
-  Background:
-    Given a database schema with the following tables
-      | Table      | Columns                                                                                                                                                     |
-      | qa.employees | EmployeeID, LastName, FirstName, Title, TitleOfCourtesy, BirthDate, HireDate, Address, City, Region, PostalCode, Country, HomePhone, Extension, Photo, Notes, ReportsTo, PhotoPath |
-      | qa.customers | CustomerID, CompanyName, ContactName, ContactTitle, Address, City, Region, PostalCode, Country, Phone, Fax                                                |
+Feature: Update database schema to include new fields
 
   Scenario: Add lastdate to employees table
-    Given I have access to the qa.employees table
-    When I add a column "lastdate" of type "timestamp" with constraints "nullable"
-    Then the qa.employees table should include the "lastdate" column
-    And "lastdate" represents the last working day of the employee
+    Given the employees table exists in the database
+    When a new column "lastdate" is added to the employees table
+    Then the column "lastdate" should be of type DATE or DATETIME
+    And the column "lastdate" should allow NULL values or have a default value as specified
+    And the purpose of the "lastdate" field should be documented
 
   Scenario: Add categoryGroup to customers table
-    Given I have access to the qa.customers table
-    When I add a column "categoryGroup" of type "string" with constraints "nullable"
-    Then the qa.customers table should include the "categoryGroup" column
-    And "categoryGroup" represents customer segmentation for the loyalty program
+    Given the customers table exists in the database
+    When a new column "categoryGroup" is added to the customers table
+    Then the column "categoryGroup" should be of type VARCHAR or INT
+    And the column "categoryGroup" should allow NULL values or have a default value as specified
+    And the possible values for "categoryGroup" should be defined and documented
