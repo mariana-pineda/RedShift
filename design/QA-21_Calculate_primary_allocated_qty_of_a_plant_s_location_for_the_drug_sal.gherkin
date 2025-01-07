@@ -1,0 +1,33 @@
+Feature: Calculate Allocated Quantity in Inventory Stock Management
+
+  Background:
+    Given the primary table is "f_inv_movmnt"
+    And there is a table "f_order" with columns "order_nbr" and "order_line_nbr"
+    And the columns "primary_qty", "open_qty", "shipped_qty", and "cancel_qty" exist in the relevant tables
+
+  Scenario: Calculate allocated_qty for specific orders
+    Given an entry exists in the "f_order" table with "order_nbr" and "order_line_nbr"
+    When I sum the quantities from "primary_qty", "open_qty", "shipped_qty", and "cancel_qty"
+    Then the result should be stored as "allocated_qty" in the "f_order" table
+
+  Scenario: Handle null values in quantity columns
+    Given an entry exists in the "f_order" table with "order_nbr" and "order_line_nbr"
+    And any of the columns "primary_qty", "open_qty", "shipped_qty", or "cancel_qty" may contain null values
+    When I calculate the sum for "allocated_qty"
+    Then null values should be treated as zero in the calculation
+
+  Scenario: Ensure data integrity during calculation
+    Given entries in the "f_order" table with "order_nbr" and "order_line_nbr"
+    When calculating "allocated_qty"
+    Then ensure all related data is consistent and complete
+
+  Scenario: Optimize performance for large datasets
+    Given a large dataset in the "f_inv_movmnt" and "f_order" tables
+    When executing the SQL logic for "allocated_qty"
+    Then the performance should be optimized to handle large volumes of data efficiently
+
+  Scenario: Validate and test the SQL logic
+    Given the SQL logic for calculating "allocated_qty" is implemented
+    When testing the logic
+    Then it should accurately reflect the committed inventory for specific uses
+    And any errors or exceptions should be handled appropriately
