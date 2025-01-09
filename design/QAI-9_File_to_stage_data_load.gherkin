@@ -1,0 +1,14 @@
+Feature: Generate Databricks SQL Query for Product Revenue and Customer Data
+
+  Background:
+    Given the CSV files "d_product_revenue.csv" and "customer.csv" are located at "/Volumes/agilisium_playground/purgo_playground/d_product_revenue_csv/"
+    And the mapping document "mapping_doc_product_revenue_customer.xlsx" is available
+
+  Scenario: Create SQL Query to Join and Transform Data
+    Given the need to perform a left join on "customer_id" between "d_product_revenue.csv" and "customer.csv"
+    When the SQL query is executed
+    Then the data should be joined according to the mapping document
+    And a new column "surrogate_key" should be created by concatenating all columns after joining
+    And the concatenated value should be hashed to form the "surrogate_key"
+    And the SQL query should be optimized for performance
+    And any errors or data validation issues should be handled appropriately
