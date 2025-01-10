@@ -4,7 +4,7 @@
 - **Major Components and Interactions:**
   - **Database Schema Manager:** Responsible for managing schema changes, including adding new columns to existing tables.
   - **Validation Service:** Ensures that data entered into the database meets predefined criteria.
-  - **Data Migration Script:** Updates existing records with default values for new columns.
+  - **Data Migration Script:** Updates existing records to comply with new schema requirements.
 
 - **Input/Output Interfaces:**
   - **Database Schema Manager:**
@@ -19,18 +19,20 @@
 
 - **Dependencies and External Systems:**
   - Relational Database Management System (RDBMS) such as PostgreSQL or MySQL.
-  - Database client for executing SQL commands.
-  - Logging system for tracking schema changes and data migrations.
+  - Database client tools for executing SQL scripts.
+  - Application server for running validation logic.
 
 #### 2. Data Flow
 
 - **Data Transformation Steps:**
-  1. **Schema Modification:**
+  1. **Schema Update:**
      - Execute SQL command to add `lastdate` column to `employees` table.
      - Execute SQL command to add `categoryGroup` column to `customers` table.
   2. **Data Migration:**
      - Update all existing `employees` records to set `lastdate` to the current date.
      - Update all existing `customers` records to set `categoryGroup` to "Uncategorized".
+  3. **Validation:**
+     - Implement validation logic to ensure `categoryGroup` only accepts "VIP", "Regular", "New".
 
 - **Data Formats and Schemas:**
   - **Employees Table:**
@@ -40,50 +42,39 @@
 
 - **Validation Rules and Error Handling:**
   - **Validation Rules:**
-    - `categoryGroup` must be one of "VIP", "Regular", "New", or "Uncategorized".
+    - `categoryGroup` must be one of "VIP", "Regular", "New".
   - **Error Handling:**
-    - Log any SQL execution errors.
-    - Rollback transaction if schema modification fails.
-    - Log validation failures and notify the responsible team.
+    - If validation fails, log the error and reject the data entry.
+    - Ensure database transactions are atomic to prevent partial updates.
 
 #### 3. Implementation Steps
 
 - **Step 1: Schema Modification**
-  - Execute SQL command to add `lastdate` to `employees`:
-    
-    ALTER TABLE employees ADD COLUMN lastdate DATE DEFAULT CURRENT_DATE;
-    
-  - Execute SQL command to add `categoryGroup` to `customers`:
-    
-    ALTER TABLE customers ADD COLUMN categoryGroup VARCHAR(20) DEFAULT 'Uncategorized';
-    
-  - **Acceptance Criteria:** Columns are added with correct types and default values.
+  - Execute SQL commands to add `lastdate` and `categoryGroup` columns.
+  - **Acceptance Criteria:** Columns are added with correct data types and default values.
 
 - **Step 2: Data Migration**
-  - Update existing `employees` records:
-    
-    UPDATE employees SET lastdate = CURRENT_DATE WHERE lastdate IS NULL;
-    
-  - Update existing `customers` records:
-    
-    UPDATE customers SET categoryGroup = 'Uncategorized' WHERE categoryGroup IS NULL;
-    
-  - **Acceptance Criteria:** All records are updated with default values.
+  - Run scripts to update existing records with default values.
+  - **Acceptance Criteria:** All records in `employees` and `customers` tables are updated correctly.
 
-- **Step 3: Validation Implementation**
-  - Implement validation logic in the application layer to ensure `categoryGroup` values are valid.
-  - **Acceptance Criteria:** Invalid entries are rejected with appropriate error messages.
+- **Step 3: Validation Logic Implementation**
+  - Develop and deploy validation logic for `categoryGroup`.
+  - **Acceptance Criteria:** Only valid categories are accepted; invalid entries are rejected.
+
+- **Step 4: Testing and Verification**
+  - Conduct tests to verify schema changes and data integrity.
+  - **Acceptance Criteria:** All tests pass without errors.
 
 #### 4. Technical Considerations
 
 - **Performance Requirements:**
-  - Ensure that schema changes and data migrations do not lock tables for extended periods.
-  - Use batch processing for large datasets to minimize performance impact.
+  - Ensure that schema changes do not degrade database performance.
+  - Optimize data migration scripts to handle large datasets efficiently.
 
 - **Security Considerations:**
   - Ensure that only authorized personnel can execute schema modification scripts.
-  - Validate all inputs to prevent SQL injection attacks.
+  - Validate inputs to prevent SQL injection attacks.
 
 - **Scalability Aspects:**
-  - Design the validation service to handle increased load as the number of customer records grows.
-  - Ensure that the database can efficiently handle additional columns without performance degradation.
+  - Design schema changes to accommodate future growth in data volume.
+  - Ensure that validation logic can handle increased load without performance degradation.
