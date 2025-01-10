@@ -1,66 +1,73 @@
 import random
 from datetime import datetime, timedelta
 
-# Generate test data for Employees table
-def generate_employee_data(num_records):
-    employees = []
-    for i in range(num_records):
-        employee = {
-            "EmployeeID": i + 1,
-            "LastName": f"LastName{i}",
-            "FirstName": f"FirstName{i}",
-            "Title": f"Title{i}",
-            "TitleOfCourtesy": f"Mr./Ms. {i}",
-            "BirthDate": datetime(1970, 1, 1) + timedelta(days=random.randint(0, 20000)),
-            "HireDate": datetime(2000, 1, 1) + timedelta(days=random.randint(0, 8000)),
-            "Address": f"Address {i}",
-            "City": f"City{i}",
-            "Region": f"Region{i}",
-            "PostalCode": f"{random.randint(10000, 99999)}",
-            "Country": f"Country{i}",
-            "HomePhone": f"{random.randint(1000000000, 9999999999)}",
-            "Extension": f"{random.randint(1000, 9999)}",
-            "Photo": None,
-            "Notes": f"Notes {i}",
-            "ReportsTo": random.randint(1, num_records) if i > 0 else None,
-            "PhotoPath": f"/photos/{i}.jpg",
-            "LastDate": datetime.now().date()  # Validate default lastdate
-        }
-        employees.append(employee)
-    return employees
+# Helper function to generate random dates
+def random_date(start, end):
+    return start + timedelta(days=random.randint(0, (end - start).days))
 
-# Generate test data for Customers table
-def generate_customer_data(num_records):
-    category_options = ["VIP", "Regular", "New", "Uncategorized"]
-    customers = []
-    for i in range(num_records):
-        category = random.choice(category_options)
-        customer = {
-            "CustomerID": f"CUST{i:05d}",
-            "CompanyName": f"CompanyName{i}",
-            "ContactName": f"ContactName{i}",
-            "ContactTitle": f"ContactTitle{i}",
-            "Address": f"Address {i}",
-            "City": f"City{i}",
-            "Region": f"Region{i}",
-            "PostalCode": f"{random.randint(10000, 99999)}",
-            "Country": f"Country{i}",
-            "Phone": f"{random.randint(1000000000, 9999999999)}",
-            "Fax": f"{random.randint(1000000000, 9999999999)}",
-            "CategoryGroup": category if category != "Uncategorized" else "Uncategorized"  # Validate categoryGroup
-        }
-        customers.append(customer)
-    return customers
+# Test Data Categories
 
-# Generate 20-30 records for each table
-employee_data = generate_employee_data(25)
-customer_data = generate_customer_data(25)
+# Happy path test data (valid, expected scenarios)
+# Employees with valid lastdate
+happy_path_employees = [
+    {"employee_id": 1, "lastdate": datetime.now().date()},
+    {"employee_id": 2, "lastdate": datetime.now().date() - timedelta(days=1)},
+    {"employee_id": 3, "lastdate": datetime.now().date() - timedelta(days=30)},
+]
 
-# Print the generated data
-print("Employee Data:")
-for emp in employee_data:
-    print(emp)
+# Customers with valid categoryGroup
+happy_path_customers = [
+    {"customer_id": 1, "categoryGroup": "VIP"},
+    {"customer_id": 2, "categoryGroup": "Regular"},
+    {"customer_id": 3, "categoryGroup": "New"},
+]
 
-print("\nCustomer Data:")
-for cust in customer_data:
-    print(cust)
+# Edge case test data (boundary conditions)
+# Employees with boundary lastdate values
+edge_case_employees = [
+    {"employee_id": 4, "lastdate": datetime(1970, 1, 1).date()},  # Unix epoch start
+    {"employee_id": 5, "lastdate": datetime(9999, 12, 31).date()},  # Far future date
+]
+
+# Customers with boundary categoryGroup values
+edge_case_customers = [
+    {"customer_id": 4, "categoryGroup": "Uncategorized"},  # Default value
+]
+
+# Error case test data (invalid inputs)
+# Employees with invalid lastdate
+error_case_employees = [
+    {"employee_id": 6, "lastdate": "invalid_date"},  # Invalid date format
+    {"employee_id": 7, "lastdate": None},  # Null value
+]
+
+# Customers with invalid categoryGroup
+error_case_customers = [
+    {"customer_id": 5, "categoryGroup": "InvalidCategory"},  # Not a predefined category
+    {"customer_id": 6, "categoryGroup": ""},  # Empty string
+]
+
+# Special character and format test data
+# Employees with special character handling in lastdate
+special_char_employees = [
+    {"employee_id": 8, "lastdate": "2023-02-29"},  # Non-leap year date
+]
+
+# Customers with special character handling in categoryGroup
+special_char_customers = [
+    {"customer_id": 7, "categoryGroup": "VIP\n"},  # Newline character
+    {"customer_id": 8, "categoryGroup": "Regular\t"},  # Tab character
+]
+
+# Combine all test data
+all_test_data = {
+    "employees": happy_path_employees + edge_case_employees + error_case_employees + special_char_employees,
+    "customers": happy_path_customers + edge_case_customers + error_case_customers + special_char_customers,
+}
+
+# Output the test data
+for category, data in all_test_data.items():
+    print(f"Test data for {category}:")
+    for record in data:
+        print(record)
+
