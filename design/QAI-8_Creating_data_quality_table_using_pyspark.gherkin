@@ -1,0 +1,25 @@
+Feature: Data Quality Checks for d_product_revenue Table
+
+  Background:
+    Given the existing table agilisium_playground.purgo_playground.d_product_revenue
+
+  Scenario: Column Name Validation
+    Given the expected column names are ['product_id', 'product_name', 'product_type', 'revenue', 'country', 'customer_id', 'purchased_date', 'invoice_date', 'invoice_number', 'is_returned', 'customer_satisfaction_score', 'product_details']
+    When I validate the column names of the d_product_revenue table
+    Then the dq_result should be "Pass" if all column names match exactly
+    And the check_name should be "Column Name Validation"
+    And the dq_result should be "Fail" if any column names do not match
+
+  Scenario: Revenue Value Check
+    Given the revenue column in the d_product_revenue table
+    When I check for negative values in the revenue column
+    Then the dq_result should be "Pass" if no negative values are found
+    And the check_name should be "Revenue Value Check"
+    And the dq_result should be "Fail" if any negative values are found
+
+  Scenario: Decimal Precision Check
+    Given the revenue column in the d_product_revenue table
+    When I verify that all values have exactly two decimal places
+    Then the dq_result should be "Pass" if all values have two decimal places
+    And the check_name should be "Decimal Precision Check"
+    And the dq_result should be "Fail" if any value does not have exactly two decimal places
