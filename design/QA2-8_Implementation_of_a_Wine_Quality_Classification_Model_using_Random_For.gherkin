@@ -1,0 +1,34 @@
+Feature: Wine Quality Classification Pipeline
+
+  Background:
+    Given the white wine quality dataset is available in Databricks
+    And the dataset is located at "/dbfs/databricks-datasets/wine-quality/winequality-white.csv"
+
+  Scenario: Load and preprocess data
+    Given the dataset is loaded from the specified path
+    When the dataset is split into training (60%), validation (20%), and test (20%) sets
+    And the 'quality' label is converted into a binary variable 'high_quality' based on a threshold of >6
+    Then the preprocessed dataset is ready for model training
+
+  Scenario: Train the Random Forest model
+    Given the preprocessed training dataset
+    When the Random Forest algorithm is used to train a classification model
+    Then a trained Random Forest model is produced
+
+  Scenario: Validate and test the model
+    Given the trained Random Forest model
+    When the model's accuracy is evaluated on the validation dataset
+    And the model's accuracy is evaluated on the test dataset
+    Then the model must achieve at least 80% accuracy on the test dataset
+
+  Scenario: Track experiments with MLflow
+    Given the model training and evaluation process
+    When MLflow is used to log model parameters and performance metrics
+    And the trained model is saved in MLflow
+    Then all experiments should be documented and accessible in MLflow with clear metrics
+
+  Scenario: Deliver a reproducible pipeline
+    Given the completed machine learning pipeline
+    When the pipeline is organized and documented
+    Then the pipeline is ready for integration into future analytics workflows
+    And a registered model in MLflow with documented metrics is delivered
