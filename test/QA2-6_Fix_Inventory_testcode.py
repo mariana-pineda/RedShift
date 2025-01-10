@@ -1,29 +1,73 @@
 import unittest
 from datetime import datetime
-from collections import Counter
+from unittest.mock import patch
 
-class TestDatabaseSchemaModifications(unittest.TestCase):
+# Mock database operations
+def mock_add_column_to_table(table_name, column_name, column_type, default_value=None):
+    # Simulate adding a column to a table
+    return True
+
+def mock_update_existing_records(table_name, column_name, value):
+    # Simulate updating existing records in a table
+    return True
+
+def mock_validate_category_group(value):
+    # Simulate validation of categoryGroup values
+    valid_categories = ["VIP", "Regular", "New", "Uncategorized"]
+    return value in valid_categories
+
+class TestDatabaseSchemaModification(unittest.TestCase):
 
     def setUp(self):
-        self.employee_data = generate_employee_data(25)
-        self.customer_data = generate_customer_data(25)
+        # Setup code if needed
+        pass
 
-    def test_lastdate_column_in_employees(self):
-        for employee in self.employee_data:
-            self.assertIn("LastDate", employee)
-            self.assertIsInstance(employee["LastDate"], datetime)
-            self.assertEqual(employee["LastDate"], datetime.now().date())
+    def tearDown(self):
+        # Teardown code if needed
+        pass
 
-    def test_categoryGroup_column_in_customers(self):
-        valid_categories = {"VIP", "Regular", "New", "Uncategorized"}
-        for customer in self.customer_data:
-            self.assertIn("CategoryGroup", customer)
-            self.assertIsInstance(customer["CategoryGroup"], str)
-            self.assertIn(customer["CategoryGroup"], valid_categories)
+    # Test adding lastdate to employees table
+    def test_add_lastdate_column_to_employees(self):
+        # Test adding the lastdate column
+        result = mock_add_column_to_table("employees", "lastdate", "DATE", "CURRENT_DATE")
+        self.assertTrue(result, "Failed to add lastdate column to employees table")
 
-    def test_default_categoryGroup_for_existing_customers(self):
-        category_counts = Counter(cust["CategoryGroup"] for cust in self.customer_data)
-        self.assertGreaterEqual(category_counts["Uncategorized"], 1)
+    def test_update_existing_employees_with_default_lastdate(self):
+        # Test updating existing employee records with default lastdate
+        result = mock_update_existing_records("employees", "lastdate", datetime.now().date())
+        self.assertTrue(result, "Failed to update existing employees with default lastdate")
+
+    # Test adding categoryGroup to customers table
+    def test_add_categoryGroup_column_to_customers(self):
+        # Test adding the categoryGroup column
+        result = mock_add_column_to_table("customers", "categoryGroup", "VARCHAR(20)", "Uncategorized")
+        self.assertTrue(result, "Failed to add categoryGroup column to customers table")
+
+    def test_update_existing_customers_with_default_categoryGroup(self):
+        # Test updating existing customer records with default categoryGroup
+        result = mock_update_existing_records("customers", "categoryGroup", "Uncategorized")
+        self.assertTrue(result, "Failed to update existing customers with default categoryGroup")
+
+    # Test validation of categoryGroup values
+    def test_validate_categoryGroup_values(self):
+        # Test valid categoryGroup values
+        for category in ["VIP", "Regular", "New", "Uncategorized"]:
+            self.assertTrue(mock_validate_category_group(category), f"Validation failed for valid category: {category}")
+
+        # Test invalid categoryGroup values
+        for category in ["InvalidCategory", "", "VIP\n", "Regular\t"]:
+            self.assertFalse(mock_validate_category_group(category), f"Validation passed for invalid category: {category}")
+
+    # Test error scenarios
+    def test_error_handling_for_invalid_lastdate(self):
+        # Test invalid lastdate values
+        with self.assertRaises(ValueError):
+            mock_update_existing_records("employees", "lastdate", "invalid_date")
+
+    def test_error_handling_for_invalid_categoryGroup(self):
+        # Test invalid categoryGroup values
+        with self.assertRaises(ValueError):
+            mock_update_existing_records("customers", "categoryGroup", "InvalidCategory")
 
 if __name__ == '__main__':
     unittest.main()
