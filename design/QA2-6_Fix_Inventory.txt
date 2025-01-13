@@ -1,82 +1,90 @@
 
 ## 1. Component Architecture
 
-### Major Components and Interactions
-- **Database Schema**: The primary component is the database schema, which includes the `employees` and `customers` tables.
-- **SQL Scripts**: Scripts to alter the existing tables to add new columns.
-- **Stored Procedures and Views**: Ensure compatibility with existing stored procedures and views that may interact with the modified tables.
+### Define the Major Components and Their Interactions
+- **Database Schema**: The primary component involves modifying the existing database schema to add new columns to the `employees` and `customers` tables.
+- **Stored Procedures and Views**: Ensure that any changes in the schema are reflected in related stored procedures and views.
+- **Validation Logic**: Implement validation logic to ensure data integrity for the new `categoryGroup` column in the `customers` table.
 
-### Input/Output Interfaces
-- **Input**: SQL commands to alter tables.
+### Specify Input/Output Interfaces
+- **Input**: SQL scripts for schema modification.
 - **Output**: Updated database schema with new columns and default values applied to existing records.
 
-### Dependencies and External Systems
-- **Database Management System (DBMS)**: The system where the database is hosted.
-- **Existing SQL Scripts**: Current scripts that define the schema and logic for the `employees` and `customers` tables.
-- **Application Logic**: Any application logic that interacts with these tables must be reviewed for compatibility.
+### Identify Dependencies and External Systems
+- **Dependencies**: 
+  - Existing database schema and data.
+  - SQL Server or equivalent database management system.
+- **External Systems**: None directly, but changes may affect applications interfacing with the database.
 
 ## 2. Data Flow
 
-### Data Transformation Steps
+### Detail the Data Transformation Steps
 1. **Add `lastdate` to `employees` table**:
-   - Alter the table to add the `lastdate` column.
-   - Set the default value to the current date for existing records.
+   - Add a new column `lastdate` of type `DATE` with a default value of the current date.
+   - Update existing records to set `lastdate` to the current date.
 
 2. **Add `categoryGroup` to `customers` table**:
-   - Alter the table to add the `categoryGroup` column.
-   - Set the default value to "Uncategorized" for existing records.
-   - Implement validation to ensure only predefined categories are allowed.
+   - Add a new column `categoryGroup` of type `NVARCHAR(20)`.
+   - Set default value to "Uncategorized" for existing records.
+   - Implement validation to restrict values to "VIP", "Regular", "New", or "Uncategorized".
 
-### Data Formats and Schemas
-- **`lastdate`**: `DATE` type.
-- **`categoryGroup`**: `NVARCHAR(20)` type, allowing values "VIP", "Regular", "New", and "Uncategorized".
+### Specify Data Formats and Schemas
+- **`employees` table**:
+  - `lastdate`: `DATE` type, default to `GETDATE()`.
 
-### Validation Rules and Error Handling
-- **Validation for `categoryGroup`**: Use a check constraint to ensure values are within the predefined set.
-- **Error Handling**: Ensure that any errors during the schema update are logged and handled gracefully, with rollback mechanisms if necessary.
+- **`customers` table**:
+  - `categoryGroup`: `NVARCHAR(20)`, default to "Uncategorized".
+
+### Define Validation Rules and Error Handling
+- **Validation Rules**:
+  - `categoryGroup` must be one of the predefined categories: "VIP", "Regular", "New", "Uncategorized".
+  
+- **Error Handling**:
+  - If an invalid category is inserted, raise an error and rollback the transaction.
 
 ## 3. Implementation Steps
 
-### Concrete Steps
+### Break Down the Development into Concrete Steps
 1. **Modify `employees` Table**:
-   - Execute SQL to add `lastdate` column:
-     
-     ALTER TABLE dbo.Employees ADD lastdate DATE DEFAULT GETDATE();
-     UPDATE dbo.Employees SET lastdate = GETDATE() WHERE lastdate IS NULL;
-     
+   - Alter table to add `lastdate` column.
+   - Update existing records to set `lastdate` to the current date.
 
 2. **Modify `customers` Table**:
-   - Execute SQL to add `categoryGroup` column:
-     
-     ALTER TABLE dbo.Customers ADD categoryGroup NVARCHAR(20) DEFAULT 'Uncategorized';
-     UPDATE dbo.Customers SET categoryGroup = 'Uncategorized' WHERE categoryGroup IS NULL;
-     ALTER TABLE dbo.Customers ADD CONSTRAINT chk_categoryGroup CHECK (categoryGroup IN ('VIP', 'Regular', 'New', 'Uncategorized'));
-     
+   - Alter table to add `categoryGroup` column.
+   - Update existing records to set `categoryGroup` to "Uncategorized".
+   - Implement check constraint for `categoryGroup`.
 
 3. **Update Stored Procedures and Views**:
-   - Review and update any stored procedures or views that reference the modified tables to ensure compatibility.
+   - Review and update any stored procedures or views that reference the modified tables.
 
-### Order of Implementation
+### Specify the Order of Implementation
 1. Modify `employees` table.
 2. Modify `customers` table.
 3. Update stored procedures and views.
 
-### Acceptance Criteria
-- **Schema Update**: The `employees` and `customers` tables should reflect the new columns with correct default values.
-- **Data Integrity**: Existing records should have the default values applied.
-- **Validation**: The `categoryGroup` column should enforce the predefined categories.
-- **Compatibility**: All stored procedures and views should function without errors.
+### Define Acceptance Criteria for Each Step
+- **`employees` Table**:
+  - `lastdate` column exists with correct default value.
+  - All existing records have `lastdate` set to the current date.
+
+- **`customers` Table**:
+  - `categoryGroup` column exists with correct default value.
+  - All existing records have `categoryGroup` set to "Uncategorized".
+  - Validation for `categoryGroup` is enforced.
+
+- **Stored Procedures and Views**:
+  - No errors or issues in stored procedures and views after schema changes.
 
 ## 4. Technical Considerations
 
 ### Performance Requirements
-- Ensure that the addition of new columns does not degrade the performance of queries on the `employees` and `customers` tables.
-- Indexes should be reviewed to maintain query performance.
+- Ensure that the addition of new columns does not significantly impact query performance.
+- Indexes should be reviewed to maintain performance, especially if queries frequently filter by `lastdate` or `categoryGroup`.
 
 ### Security Considerations
-- Ensure that the new columns do not expose sensitive information.
-- Review permissions to ensure only authorized users can modify the new columns.
+- Ensure that permissions for altering tables are restricted to authorized users.
+- Validate input data to prevent SQL injection, especially for `categoryGroup`.
 
 ### Scalability Aspects
-- The schema changes should support future growth in the number of records without requiring further schema modifications.
-- Consider partitioning strategies if the tables grow significantly in size.
+- The schema changes should be designed to handle future growth in data volume.
+- Consider partitioning strategies if the `employees` or `customers` tables grow significantly.
