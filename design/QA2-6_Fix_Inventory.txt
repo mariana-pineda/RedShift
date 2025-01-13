@@ -1,90 +1,72 @@
 
-## 1. Component Architecture
-
-### Define the Major Components and Their Interactions
-- **Database Schema**: The primary component involves modifying the existing database schema to add new columns to the `employees` and `customers` tables.
-- **Stored Procedures and Views**: Ensure that any changes in the schema are reflected in related stored procedures and views.
-- **Validation Logic**: Implement validation logic to ensure data integrity for the new `categoryGroup` column in the `customers` table.
-
-### Specify Input/Output Interfaces
-- **Input**: SQL scripts for schema modification.
-- **Output**: Updated database schema with new columns and default values applied to existing records.
-
-### Identify Dependencies and External Systems
-- **Dependencies**: 
-  - Existing database schema and data.
-  - SQL Server or equivalent database management system.
-- **External Systems**: None directly, but changes may affect applications interfacing with the database.
-
-## 2. Data Flow
-
-### Detail the Data Transformation Steps
-1. **Add `lastdate` to `employees` table**:
-   - Add a new column `lastdate` of type `DATE` with a default value of the current date.
-   - Update existing records to set `lastdate` to the current date.
-
-2. **Add `categoryGroup` to `customers` table**:
-   - Add a new column `categoryGroup` of type `NVARCHAR(20)`.
-   - Set default value to "Uncategorized" for existing records.
-   - Implement validation to restrict values to "VIP", "Regular", "New", or "Uncategorized".
-
-### Specify Data Formats and Schemas
-- **`employees` table**:
-  - `lastdate`: `DATE` type, default to `GETDATE()`.
-
-- **`customers` table**:
-  - `categoryGroup`: `NVARCHAR(20)`, default to "Uncategorized".
-
-### Define Validation Rules and Error Handling
-- **Validation Rules**:
-  - `categoryGroup` must be one of the predefined categories: "VIP", "Regular", "New", "Uncategorized".
+1. Component Architecture
+- **Major Components and Interactions:**
+  - **Database Schema Update Component:** Responsible for modifying the database schema to add new columns to existing tables.
+  - **Data Migration Component:** Ensures existing records are updated with default values for the new columns.
+  - **Validation Component:** Validates data integrity and enforces constraints on the new columns.
   
-- **Error Handling**:
-  - If an invalid category is inserted, raise an error and rollback the transaction.
+- **Input/Output Interfaces:**
+  - **Database Schema Update Component:**
+    - Input: SQL scripts for schema modification.
+    - Output: Updated database schema with new columns.
+  - **Data Migration Component:**
+    - Input: Existing records in the `employees` and `customers` tables.
+    - Output: Updated records with default values for `lastdate` and `categoryGroup`.
+  - **Validation Component:**
+    - Input: Data entries for `categoryGroup`.
+    - Output: Validation results ensuring only predefined categories are accepted.
 
-## 3. Implementation Steps
+- **Dependencies and External Systems:**
+  - **Database Management System (DBMS):** The system where the schema changes will be applied.
+  - **Existing Application Logic:** Must be compatible with the new schema changes.
+  - **Data Backup Systems:** To ensure data integrity during schema updates.
 
-### Break Down the Development into Concrete Steps
-1. **Modify `employees` Table**:
-   - Alter table to add `lastdate` column.
-   - Update existing records to set `lastdate` to the current date.
+2. Data Flow
+- **Data Transformation Steps:**
+  - **Step 1:** Add `lastdate` column to `employees` table with a default value of the current date.
+  - **Step 2:** Add `categoryGroup` column to `customers` table with a default value of "Uncategorized".
+  - **Step 3:** Validate `categoryGroup` entries against predefined categories ("VIP", "Regular", "New").
 
-2. **Modify `customers` Table**:
-   - Alter table to add `categoryGroup` column.
-   - Update existing records to set `categoryGroup` to "Uncategorized".
-   - Implement check constraint for `categoryGroup`.
+- **Data Formats and Schemas:**
+  - **`lastdate`:** `DATE` type, default value set to `CURRENT_DATE`.
+  - **`categoryGroup`:** `NVARCHAR(20)`, default value "Uncategorized", with a check constraint for valid categories.
 
-3. **Update Stored Procedures and Views**:
-   - Review and update any stored procedures or views that reference the modified tables.
+- **Validation Rules and Error Handling:**
+  - **Validation Rule for `categoryGroup`:** Must be one of "VIP", "Regular", "New", or "Uncategorized".
+  - **Error Handling:** Log errors for invalid data entries and rollback transactions if constraints are violated.
 
-### Specify the Order of Implementation
-1. Modify `employees` table.
-2. Modify `customers` table.
-3. Update stored procedures and views.
+3. Implementation Steps
+- **Step 1: Modify Employees Table**
+  - **Action:** Execute SQL script to add `lastdate` column.
+  - **SQL Example:** 
+    
+    ALTER TABLE dbo.Employees ADD lastdate DATE DEFAULT GETDATE();
+    UPDATE dbo.Employees SET lastdate = GETDATE() WHERE lastdate IS NULL;
+    
+  - **Acceptance Criteria:** `lastdate` column exists with default values for all records.
 
-### Define Acceptance Criteria for Each Step
-- **`employees` Table**:
-  - `lastdate` column exists with correct default value.
-  - All existing records have `lastdate` set to the current date.
+- **Step 2: Modify Customers Table**
+  - **Action:** Execute SQL script to add `categoryGroup` column.
+  - **SQL Example:** 
+    
+    ALTER TABLE dbo.Customers ADD categoryGroup NVARCHAR(20) DEFAULT 'Uncategorized';
+    UPDATE dbo.Customers SET categoryGroup = 'Uncategorized' WHERE categoryGroup IS NULL;
+    ALTER TABLE dbo.Customers ADD CONSTRAINT chk_categoryGroup CHECK (categoryGroup IN ('VIP', 'Regular', 'New', 'Uncategorized'));
+    
+  - **Acceptance Criteria:** `categoryGroup` column exists with default values and validation constraints.
 
-- **`customers` Table**:
-  - `categoryGroup` column exists with correct default value.
-  - All existing records have `categoryGroup` set to "Uncategorized".
-  - Validation for `categoryGroup` is enforced.
+- **Step 3: Update Related Stored Procedures and Views**
+  - **Action:** Modify any stored procedures or views that interact with the modified tables.
+  - **Acceptance Criteria:** All procedures and views function correctly with the new schema.
 
-- **Stored Procedures and Views**:
-  - No errors or issues in stored procedures and views after schema changes.
+4. Technical Considerations
+- **Performance Requirements:**
+  - Ensure that the addition of new columns does not degrade query performance. Indexes may need to be reviewed and adjusted.
 
-## 4. Technical Considerations
+- **Security Considerations:**
+  - Ensure that permissions for modifying the schema are restricted to authorized personnel.
+  - Validate input data to prevent SQL injection attacks.
 
-### Performance Requirements
-- Ensure that the addition of new columns does not significantly impact query performance.
-- Indexes should be reviewed to maintain performance, especially if queries frequently filter by `lastdate` or `categoryGroup`.
-
-### Security Considerations
-- Ensure that permissions for altering tables are restricted to authorized users.
-- Validate input data to prevent SQL injection, especially for `categoryGroup`.
-
-### Scalability Aspects
-- The schema changes should be designed to handle future growth in data volume.
-- Consider partitioning strategies if the `employees` or `customers` tables grow significantly.
+- **Scalability Aspects:**
+  - Design the schema changes to accommodate future growth in data volume.
+  - Ensure that the validation logic for `categoryGroup` can be easily updated to include new categories if needed.
