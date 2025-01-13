@@ -1,0 +1,19 @@
+Feature: Update database schema to include new columns
+
+  Scenario: Add lastdate to employees table
+    Given the employees table exists
+    When I add a new column named "lastdate" to the employees table
+    Then the column "lastdate" should be added successfully
+    And the data type for "lastdate" should be confirmed
+    And the purpose of "lastdate" should be defined
+    And the default value and nullability for "lastdate" should be determined
+    And a strategy for handling existing records should be developed
+
+  Scenario: Add categoryGroup to customers table
+    Given the customers table exists
+    When I add a new column named "categoryGroup" to the customers table
+    Then the column "categoryGroup" should be added successfully
+    And the data type for "categoryGroup" should be confirmed
+    And the purpose of "categoryGroup" should be defined
+    And the default value and nullability for "categoryGroup" should be determined
+    And a strategy for handling existing records should be developed
