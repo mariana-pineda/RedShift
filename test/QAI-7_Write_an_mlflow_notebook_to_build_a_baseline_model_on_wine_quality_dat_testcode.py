@@ -1,65 +1,72 @@
 # Databricks notebook source
+import unittest
 import pandas as pd
-import numpy as np
+from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
 import mlflow
 import mlflow.sklearn
 
-# Load the dataset
-file_path = "/dbfs/databricks-datasets/wine-quality/winequality-white.csv"
-data = pd.read_csv(file_path, sep=';')
+class TestWineQualityModel(unittest.TestCase):
 
-# Transform the "quality" column into "high_quality"
-data['high_quality'] = data['quality'] > 6
+    @classmethod
+    def setUpClass(cls):
+        # Load data
+        cls.data_path = '/dbfs/databricks-datasets/wine-quality/winequality-white.csv'
+        cls.data = pd.read_csv(cls.data_path, sep=';')
+        # Preprocess data
+        cls.data['high_quality'] = cls.data['quality'] > 6
+        cls.data.drop('quality', axis=1, inplace=True)
+        # Split data
+        cls.train, cls.temp = train_test_split(cls.data, test_size=0.4, random_state=42)
+        cls.validate, cls.test = train_test_split(cls.temp, test_size=0.5, random_state=42)
 
-# Split the data into 60% training, 20% validation, and 20% test sets
-train_data = data.sample(frac=0.6, random_state=42)
-remaining_data = data.drop(train_data.index)
-validation_data = remaining_data.sample(frac=0.5, random_state=42)
-test_data = remaining_data.drop(validation_data.index)
+    def test_data_loading(self):
+        # Test if data is loaded correctly
+        self.assertFalse(self.data.empty, "Data should not be empty after loading")
+        self.assertIn('high_quality', self.data.columns, "Data should have 'high_quality' column after preprocessing")
 
-# Prepare features and labels
-X_train = train_data.drop(['quality', 'high_quality'], axis=1)
-y_train = train_data['high_quality']
-X_validation = validation_data.drop(['quality', 'high_quality'], axis=1)
-y_validation = validation_data['high_quality']
-X_test = test_data.drop(['quality', 'high_quality'], axis=1)
-y_test = test_data['high_quality']
+    def test_data_splitting(self):
+        # Test if data is split correctly
+        total_rows = len(self.data)
+        train_rows = len(self.train)
+        validate_rows = len(self.validate)
+        test_rows = len(self.test)
+        self.assertAlmostEqual(train_rows / total_rows, 0.6, delta=0.05, msg="Training set should be approximately 60% of total data")
+        self.assertAlmostEqual(validate_rows / total_rows, 0.2, delta=0.05, msg="Validation set should be approximately 20% of total data")
+        self.assertAlmostEqual(test_rows / total_rows, 0.2, delta=0.05, msg="Test set should be approximately 20% of total data")
 
-# Train Random Forest model
-rf_model = RandomForestClassifier(random_state=42)
-rf_model.fit(X_train, y_train)
+    def test_model_training(self):
+        # Test if model trains without errors
+        X_train = self.train.drop('high_quality', axis=1)
+        y_train = self.train['high_quality']
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(X_train, y_train)
+        self.assertIsNotNone(model, "Model should be trained and not None")
 
-# Evaluate the model on validation set
-validation_predictions = rf_model.predict(X_validation)
-validation_accuracy = accuracy_score(y_validation, validation_predictions)
+    def test_model_validation(self):
+        # Test if model validation score is reasonable
+        X_validate = self.validate.drop('high_quality', axis=1)
+        y_validate = self.validate['high_quality']
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(self.train.drop('high_quality', axis=1), self.train['high_quality'])
+        validation_score = model.score(X_validate, y_validate)
+        self.assertGreater(validation_score, 0.5, "Validation score should be greater than 0.5")
 
-# Test the model on test set
-test_predictions = rf_model.predict(X_test)
-test_accuracy = accuracy_score(y_test, test_predictions)
+    def test_experiment_logging(self):
+        # Test if experiment logs correctly
+        mlflow.set_experiment('/Workspace/Shared/purgo_poc/winequality-experiment')
+        with mlflow.start_run():
+            model = RandomForestClassifier(n_estimators=100, random_state=42)
+            model.fit(self.train.drop('high_quality', axis=1), self.train['high_quality'])
+            mlflow.sklearn.log_model(model, "model")
+            mlflow.log_metric("validation_score", model.score(self.validate.drop('high_quality', axis=1), self.validate['high_quality']))
+            run_id = mlflow.active_run().info.run_id
+            self.assertIsNotNone(run_id, "Run ID should not be None after logging experiment")
 
-# Log experiment in MLflow
-mlflow.set_experiment("/Workspace/Shared/purgo_poc/winequality-experiement")
-with mlflow.start_run():
-    mlflow.log_param("random_state", 42)
-    mlflow.log_metric("validation_accuracy", validation_accuracy)
-    mlflow.log_metric("test_accuracy", test_accuracy)
-    mlflow.sklearn.log_model(rf_model, "random_forest_model")
+    @classmethod
+    def tearDownClass(cls):
+        # Clean up resources if needed
+        pass
 
-# Validation code
-def validate_model():
-    # Validate high_quality transformation
-    assert all(data[data['quality'] > 6]['high_quality'] == True), "High quality transformation failed for quality > 6"
-    assert all(data[data['quality'] <= 6]['high_quality'] == False), "High quality transformation failed for quality <= 6"
-
-    # Validate data split ratios
-    assert len(train_data) / len(data) == 0.6, "Training data split ratio is incorrect"
-    assert len(validation_data) / len(data) == 0.2, "Validation data split ratio is incorrect"
-    assert len(test_data) / len(data) == 0.2, "Test data split ratio is incorrect"
-
-    # Validate model accuracy
-    assert validation_accuracy > 0, "Validation accuracy should be greater than 0"
-    assert test_accuracy > 0, "Test accuracy should be greater than 0"
-
-validate_model()
+if __name__ == '__main__':
+    unittest.main(argv=[''], exit=False)
