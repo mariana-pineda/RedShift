@@ -1,0 +1,86 @@
+
+#### 1. Component Architecture
+
+- **Major Components and Interactions:**
+  - **Data Quality Script:** A PySpark script that performs data quality checks on the `agilisium_playground.purgo_playground.d_product_revenue` table.
+  - **Data Quality Table:** A table named `agilisium_playground.purgo_playground.dq_check_table` to store the results of the data quality checks.
+  - **Databricks Environment:** The execution environment for the PySpark script, leveraging Databricks for distributed data processing.
+
+- **Input/Output Interfaces:**
+  - **Input:** 
+    - Source Table: `agilisium_playground.purgo_playground.d_product_revenue`
+  - **Output:**
+    - DQ Table: `agilisium_playground.purgo_playground.dq_check_table` with columns `check_no` (INT), `check_name` (STRING), and `dq_result` (STRING).
+
+- **Dependencies and External Systems:**
+  - **Databricks Cluster:** Required for executing the PySpark script.
+  - **Unity Catalog:** Used for managing and accessing the `d_product_revenue` table.
+
+#### 2. Data Flow
+
+- **Data Transformation Steps:**
+  1. **Column Name Check:**
+     - Retrieve the schema of `d_product_revenue`.
+     - Compare with the expected list of column names.
+     - Log "Pass" if all names match, otherwise "Fail".
+  2. **Negative Value Check:**
+     - Scan the `revenue` column for negative values.
+     - Log "Pass" if no negative values are found, otherwise "Fail".
+  3. **Decimal Precision Check:**
+     - Verify that `revenue` values have exactly two decimal places.
+     - Log "Pass" if all values meet the criteria, otherwise "Fail".
+
+- **Data Formats and Schemas:**
+  - **DQ Table Schema:**
+    - `check_no`: INT
+    - `check_name`: STRING
+    - `dq_result`: STRING
+
+- **Validation Rules and Error Handling:**
+  - **Column Name Check:**
+    - Expected Columns: `['product_id', 'product_name', 'product_type', 'revenue', 'country', 'customer_id', 'purchased_date', 'invoice_date', 'invoice_number', 'is_returned', 'customer_satisfaction_score', 'product_details']`
+    - Error Handling: Log "Fail" if any column is missing or extra columns are present.
+  - **Negative Value Check:**
+    - Rule: `revenue >= 0`
+    - Error Handling: Log "Fail" if any negative value is found.
+  - **Decimal Precision Check:**
+    - Rule: `revenue` should match regex `^\d+\.\d{2}$`
+    - Error Handling: Log "Fail" if any value does not match.
+
+#### 3. Implementation Steps
+
+- **Development Steps:**
+  1. **Setup Databricks Environment:**
+     - Configure the cluster and ensure access to the Unity Catalog.
+  2. **Implement Column Name Check:**
+     - Write PySpark code to validate column names.
+     - Log results in the DQ table.
+  3. **Implement Negative Value Check:**
+     - Write PySpark code to check for negative values in `revenue`.
+     - Log results in the DQ table.
+  4. **Implement Decimal Precision Check:**
+     - Write PySpark code to validate decimal precision.
+     - Log results in the DQ table.
+  5. **Testing and Validation:**
+     - Execute the script and verify the DQ table entries.
+
+- **Order of Implementation:**
+  - Follow the sequence: Setup, Column Name Check, Negative Value Check, Decimal Precision Check, Testing.
+
+- **Acceptance Criteria:**
+  - All checks are implemented and results are accurately logged in the DQ table.
+  - The script runs without errors in the Databricks environment.
+
+#### 4. Technical Considerations
+
+- **Performance Requirements:**
+  - The script should efficiently handle large datasets typical in life sciences.
+  - Optimize PySpark operations to minimize execution time.
+
+- **Security Considerations:**
+  - Ensure access to the `d_product_revenue` table is restricted to authorized users.
+  - Implement logging for audit purposes.
+
+- **Scalability Aspects:**
+  - Design the script to scale with increasing data volume.
+  - Utilize Databricks' distributed computing capabilities to handle large-scale data processing.
