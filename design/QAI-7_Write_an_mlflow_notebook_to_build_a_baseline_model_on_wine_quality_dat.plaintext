@@ -1,0 +1,90 @@
+Technical Design Specification
+
+1. Component Architecture
+- Define the major components and their interactions
+  - **Data Ingestion Component**: Reads the wine dataset from the specified CSV file.
+  - **Data Preprocessing Component**: Handles data cleaning, transformation, and splitting.
+  - **Model Training Component**: Trains a Random Forest model on the preprocessed data.
+  - **Experiment Tracking Component**: Logs the experiment details and results to MLflow.
+- Specify input/output interfaces
+  - **Input**: CSV file located at `/dbfs/databricks-datasets/wine-quality/winequality-white.csv`.
+  - **Output**: Trained model, validation metrics, and experiment logs stored in MLflow.
+- Identify dependencies and external systems
+  - **Dependencies**: Pandas, Scikit-learn, MLflow, Databricks environment.
+  - **External Systems**: Databricks File System (DBFS) for data storage, MLflow for experiment tracking.
+
+2. Data Flow
+- Detail the data transformation steps
+  - Load the CSV file using Pandas with `sep=';'`.
+  - Transform the `quality` column into a binary `high_quality` column.
+  - Split the data into training (60%), validation (20%), and test (20%) sets.
+- Specify data formats and schemas
+  - **Input Data Format**: CSV with semicolon separator.
+  - **Schema**: All columns are numeric except the `high_quality` column which is boolean.
+- Define validation rules and error handling
+  - Ensure no missing values in the dataset.
+  - Validate that the `quality` column is transformed correctly.
+  - Handle file not found errors and data type mismatches.
+
+3. Implementation Steps
+- Break down the development into concrete steps
+  1. Load the dataset from the specified path.
+  2. Preprocess the data: handle separators, transform the `quality` column.
+  3. Split the data into train, validation, and test sets.
+  4. Train the Random Forest model on the training set.
+  5. Validate the model using the validation set.
+  6. Log the experiment details and results to MLflow.
+- Specify the order of implementation
+  - Follow the steps in the order listed above.
+- Define acceptance criteria for each step
+  - Successful data load and transformation.
+  - Correct data split with reproducible results.
+  - Model training completes without errors.
+  - Experiment details are logged in MLflow.
+
+4. Technical Considerations
+- Performance requirements
+  - Ensure efficient data loading and processing to handle the dataset size.
+  - Optimize model training time by tuning Random Forest parameters.
+- Security considerations
+  - Ensure data privacy by not exposing sensitive data.
+  - Use secure connections for data transfer and MLflow logging.
+- Scalability aspects
+  - Design the solution to handle larger datasets by leveraging Databricks' distributed computing capabilities.
+  - Ensure the model can be retrained with new data without significant changes to the pipeline.
+
+# Databricks notebook source
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+import mlflow
+import mlflow.sklearn
+
+# Load data
+data_path = '/dbfs/databricks-datasets/wine-quality/winequality-white.csv'
+data = pd.read_csv(data_path, sep=';')
+
+# Preprocess data
+data['high_quality'] = data['quality'] > 6
+data.drop('quality', axis=1, inplace=True)
+
+# Split data
+train, temp = train_test_split(data, test_size=0.4, random_state=42)
+validate, test = train_test_split(temp, test_size=0.5, random_state=42)
+
+# Train model
+X_train = train.drop('high_quality', axis=1)
+y_train = train['high_quality']
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Validate model
+X_validate = validate.drop('high_quality', axis=1)
+y_validate = validate['high_quality']
+validation_score = model.score(X_validate, y_validate)
+
+# Log experiment
+mlflow.set_experiment('/Workspace/Shared/purgo_poc/winequality-experiment')
+with mlflow.start_run():
+    mlflow.sklearn.log_model(model, "model")
+    mlflow.log_metric("validation_score", validation_score)
