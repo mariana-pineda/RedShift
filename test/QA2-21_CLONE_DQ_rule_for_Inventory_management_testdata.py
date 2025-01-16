@@ -1,98 +1,118 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, when, count, lit, expr
-from pyspark.sql.types import StringType, DoubleType, IntegerType, DateType
-from pyspark.sql import functions as F
+from pyspark.sql.functions import col, when, count, lit
+from pyspark.sql.types import StructType, StructField, StringType, DoubleType
 
 # Initialize Spark session
-spark = SparkSession.builder \
-    .appName("Data Quality Checks") \
-    .getOrCreate()
+spark = SparkSession.builder.appName("DataQualityChecks").getOrCreate()
 
-# Load the drug_inventory_management table
-drug_inventory_df = spark.read.format("delta").load("path_to_drug_inventory_management_table")
+# Load the drug_inventory_management table into a DataFrame
+drug_inventory_df = spark.read.format("csv").option("header", "true").load("path_to_drug_inventory_management.csv")
 
-# Define data quality rules
-dq_rules = [
-    {
-        "check_name": "Mandatory Fields Check",
-        "condition": "product_ID IS NOT NULL AND product_name IS NOT NULL AND quantity IS NOT NULL AND location IS NOT NULL AND expiry_date IS NOT NULL AND batch_number IS NOT NULL AND supplier_ID IS NOT NULL",
-        "description": "Ensure all mandatory fields are not null"
-    },
-    {
-        "check_name": "Expiry Date Check",
-        "condition": "expiry_date > purchase_date",
-        "description": "Ensure expiry_date is greater than purchase_date"
-    },
-    {
-        "check_name": "Unique Check",
-        "condition": "product_ID IS NOT NULL AND batch_number IS NOT NULL",
-        "description": "Ensure Product ID and Batch number are unique"
-    },
-    {
-        "check_name": "Data Consistency Check",
-        "condition": "quantity > 0 AND expiry_date RLIKE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'",
-        "description": "Make sure quantity is positive and date columns are in the correct format"
-    }
-]
+# Define the schema for the data quality result DataFrame
+dq_result_schema = StructType([
+    StructField("check_name", StringType(), False),
+    StructField("result", StringType(), False),
+    StructField("pass_%", DoubleType(), False)
+])
 
-# Function to apply data quality checks
-def apply_dq_checks(df, rules):
-    results = []
-    total_rows = df.count()
-    
-    for rule in rules:
-        check_name = rule["check_name"]
-        condition = rule["condition"]
-        
-        # Apply the condition and calculate pass percentage
-        passed_df = df.filter(condition)
-        passed_count = passed_df.count()
-        pass_percentage = (passed_count / total_rows) * 100
-        
-        # Append result
-        results.append((check_name, "Pass" if pass_percentage == 100 else "Fail", pass_percentage))
-    
-    # Create a DataFrame for the results
-    result_df = spark.createDataFrame(results, ["check_name", "result", "pass_%"])
-    return result_df
+# Initialize an empty DataFrame for data quality results
+dq_results_df = spark.createDataFrame([], dq_result_schema)
 
-# Apply data quality checks
-dq_results_df = apply_dq_checks(drug_inventory_df, dq_rules)
+# Total number of records
+total_records = drug_inventory_df.count()
 
-# Show the results
+# Happy Path Test Data: Valid scenarios
+# Test case: All mandatory fields are present
+happy_path_df = drug_inventory_df.filter(
+    col("product_ID").isNotNull() &
+    col("product_name").isNotNull() &
+    col("quantity").isNotNull() &
+    col("location").isNotNull() &
+    col("expiry_date").isNotNull() &
+    col("batch_number").isNotNull() &
+    col("supplier_ID").isNotNull()
+)
+
+# Edge Case Test Data: Boundary conditions
+# Test case: Expiry date is exactly one day after purchase date
+edge_case_df = drug_inventory_df.filter(
+    col("expiry_date") > col("purchase_date")
+)
+
+# Error Case Test Data: Invalid inputs
+# Test case: Negative quantity
+error_case_df = drug_inventory_df.filter(
+    col("quantity") <= 0
+)
+
+# Special Character and Format Test Data
+# Test case: Date format is incorrect
+special_char_df = drug_inventory_df.filter(
+    ~col("expiry_date").rlike("^\d{4}-\d{2}-\d{2}$")
+)
+
+# Data Quality Checks
+# Mandatory Fields Check
+mandatory_fields_check = drug_inventory_df.filter(
+    col("product_ID").isNull() |
+    col("product_name").isNull() |
+    col("quantity").isNull() |
+    col("location").isNull() |
+    col("expiry_date").isNull() |
+    col("batch_number").isNull() |
+    col("supplier_ID").isNull()
+).count()
+
+mandatory_fields_pass_percentage = ((total_records - mandatory_fields_check) / total_records) * 100
+
+dq_results_df = dq_results_df.union(
+    spark.createDataFrame(
+        [("Mandatory Fields Check", "Pass" if mandatory_fields_check == 0 else "Fail", mandatory_fields_pass_percentage)],
+        dq_result_schema
+    )
+)
+
+# Expiry Date Check
+expiry_date_check = drug_inventory_df.filter(
+    col("expiry_date") <= col("purchase_date")
+).count()
+
+expiry_date_pass_percentage = ((total_records - expiry_date_check) / total_records) * 100
+
+dq_results_df = dq_results_df.union(
+    spark.createDataFrame(
+        [("Expiry Date Check", "Pass" if expiry_date_check == 0 else "Fail", expiry_date_pass_percentage)],
+        dq_result_schema
+    )
+)
+
+# Unique Check
+unique_check = drug_inventory_df.groupBy("product_ID", "batch_number").count().filter("count > 1").count()
+
+unique_pass_percentage = ((total_records - unique_check) / total_records) * 100
+
+dq_results_df = dq_results_df.union(
+    spark.createDataFrame(
+        [("Unique Check", "Pass" if unique_check == 0 else "Fail", unique_pass_percentage)],
+        dq_result_schema
+    )
+)
+
+# Data Consistency Check
+data_consistency_check = drug_inventory_df.filter(
+    (col("quantity") <= 0) |
+    (~col("expiry_date").rlike("^\d{4}-\d{2}-\d{2}$"))
+).count()
+
+data_consistency_pass_percentage = ((total_records - data_consistency_check) / total_records) * 100
+
+dq_results_df = dq_results_df.union(
+    spark.createDataFrame(
+        [("Data Consistency Check", "Pass" if data_consistency_check == 0 else "Fail", data_consistency_pass_percentage)],
+        dq_result_schema
+    )
+)
+
+# Show the data quality results
 dq_results_df.show()
 
-# Stop the Spark session
-spark.stop()
-
-
-### Explanation of Test Data Generation
-
-1. **Happy Path Test Data:**
-   - Records where all mandatory fields are filled, expiry dates are valid, quantities are positive, and formats are correct.
-
-2. **Edge Case Test Data:**
-   - Records with expiry dates exactly one day after purchase dates.
-   - Records with quantities exactly equal to zero (should fail).
-
-3. **Error Case Test Data:**
-   - Records with null values in mandatory fields.
-   - Records with expiry dates before purchase dates.
-   - Duplicate Product ID and Batch number combinations.
-
-4. **Special Character and Format Test Data:**
-   - Records with special characters in string fields.
-   - Records with date fields in incorrect formats (e.g., DD-MM-YYYY).
-
-### Data Generation Rules
-
-- Ensure a mix of scenarios for each data field.
-- Cover all business rules and validations.
-- Include data for all identified edge cases.
-
-### Code Structure
-
-- Clear variable names indicating the test scenario.
-- Comments explaining the test case conditions.
-- Group related test data together.
-- Include data type and format validations.
