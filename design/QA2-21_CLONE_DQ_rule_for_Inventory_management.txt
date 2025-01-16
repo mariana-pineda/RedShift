@@ -1,72 +1,88 @@
 
 1. Component Architecture
-   - **Major Components and Interactions:**
-     - **Data Ingestion Component:** Responsible for loading the `drug_inventory_management` table into a Spark DataFrame.
-     - **Data Quality Check Component:** Implements the data quality rules specified in the `DQ_rules_IM` sheet.
-     - **Notification Component:** Sends alerts when data quality rules are violated.
-     - **Data Quality Result Component:** Creates a DataFrame summarizing the results of the data quality checks.
+- **Major Components and Interactions:**
+  - **Data Ingestion Component:** Reads the `drug_inventory_management` table from the Databricks environment.
+  - **Data Quality Rule Engine:** Applies data quality rules as defined in the `DQ_rules_IM` sheet.
+  - **Notification System:** Sends alerts when data quality rules are violated.
+  - **Data Quality Results Dataframe:** Stores the results of the data quality checks.
 
-   - **Input/Output Interfaces:**
-     - **Input:** `drug_inventory_management` table loaded as a Spark DataFrame.
-     - **Output:** Data quality result DataFrame with columns `check_name`, `result`, and `pass_%`.
+- **Input/Output Interfaces:**
+  - **Input:** 
+    - `drug_inventory_management` table.
+    - `DQ_rules_IM` sheet from `data_quality_mapping.xlsx`.
+  - **Output:** 
+    - Data quality results dataframe with columns: `check_name`, `result`, `pass_%`.
+    - Notification alerts for rule violations.
 
-   - **Dependencies and External Systems:**
-     - **Databricks Environment:** For executing PySpark/Spark SQL code.
-     - **Notification System:** External system for sending alerts (e.g., email, logging service).
+- **Dependencies and External Systems:**
+  - **Databricks Environment:** For executing PySpark/Spark SQL code.
+  - **Excel File Reader:** To read the `DQ_rules_IM` sheet.
+  - **Notification Service:** For sending alerts (e.g., email, logging system).
 
 2. Data Flow
-   - **Data Transformation Steps:**
-     1. Load the `drug_inventory_management` table into a Spark DataFrame.
-     2. Apply data quality rules to the DataFrame:
-        - **Mandatory Fields Check:** Verify non-null values for specified fields.
-        - **Expiry Date Check:** Ensure `expiry_date` > `purchase_date`.
-        - **Unique Check:** Ensure uniqueness of `Product ID` and `Batch number`.
-        - **Data Consistency Check:** Validate positive `quantity` and correct date format.
+- **Data Transformation Steps:**
+  1. **Load Data:** Read the `drug_inventory_management` table into a Spark DataFrame.
+  2. **Apply Data Quality Rules:**
+     - **Mandatory Fields Check:** Verify non-null values for specified fields.
+     - **Expiry Date Check:** Ensure `expiry_date` > `purchase_date`.
+     - **Unique Check:** Validate uniqueness of `Product ID` and `Batch number`.
+     - **Data Consistency Check:** Ensure positive `quantity` and correct date format.
 
-   - **Data Formats and Schemas:**
-     - Input DataFrame schema corresponds to the `stg_nl_wholesaler` sheet.
-     - Output DataFrame schema:
-       
-       StructType([
-           StructField("check_name", StringType(), False),
-           StructField("result", StringType(), False),
-           StructField("pass_%", DoubleType(), False)
-       ])
-       
+- **Data Formats and Schemas:**
+  - **Input DataFrame Schema:** Matches the structure provided in the `stg_nl_wholesaler` sheet.
+  - **Data Quality Results DataFrame Schema:**
+    
+    StructType([
+        StructField("check_name", StringType(), True),
+        StructField("result", StringType(), True),
+        StructField("pass_%", DoubleType(), True)
+    ])
+    
 
-   - **Validation Rules and Error Handling:**
-     - **Mandatory Fields Check:** Log error if any mandatory field is null.
-     - **Expiry Date Check:** Log error if `expiry_date` <= `purchase_date`.
-     - **Unique Check:** Log error if duplicates are found.
-     - **Data Consistency Check:** Log error if `quantity` <= 0 or date format is incorrect.
-     - Handle errors by logging and triggering notifications.
+- **Validation Rules and Error Handling:**
+  - **Mandatory Fields Check:** Log error if any mandatory field is null.
+  - **Expiry Date Check:** Log error if `expiry_date` is not greater than `purchase_date`.
+  - **Unique Check:** Log error if duplicates are found.
+  - **Data Consistency Check:** Log error if `quantity` is not positive or date format is incorrect.
 
 3. Implementation Steps
-   - **Step 1: Data Ingestion**
-     - Load the `drug_inventory_management` table into a Spark DataFrame.
-     - **Acceptance Criteria:** DataFrame is successfully loaded with the correct schema.
+- **Step 1: Data Ingestion**
+  - **Implementation:** Load the `drug_inventory_management` table into a Spark DataFrame.
+  - **Acceptance Criteria:** DataFrame is successfully loaded with the correct schema.
 
-   - **Step 2: Implement Data Quality Checks**
-     - Apply each data quality rule to the DataFrame.
-     - **Acceptance Criteria:** Each rule is implemented and tested with sample data.
+- **Step 2: Apply Mandatory Fields Check**
+  - **Implementation:** Use DataFrame operations to filter rows with null values in mandatory fields.
+  - **Acceptance Criteria:** All mandatory fields are verified for non-null values.
 
-   - **Step 3: Generate Data Quality Result DataFrame**
-     - Create a DataFrame summarizing the results of the data quality checks.
-     - **Acceptance Criteria:** DataFrame is created with correct structure and accurate results.
+- **Step 3: Apply Expiry Date Check**
+  - **Implementation:** Use Spark SQL to compare `expiry_date` and `purchase_date`.
+  - **Acceptance Criteria:** All records have `expiry_date` greater than `purchase_date`.
 
-   - **Step 4: Implement Notification Mechanism**
-     - Develop a mechanism to send alerts for rule violations.
-     - **Acceptance Criteria:** Notifications are sent successfully upon rule violations.
+- **Step 4: Apply Unique Check**
+  - **Implementation:** Use DataFrame `dropDuplicates` method for `Product ID` and `Batch number`.
+  - **Acceptance Criteria:** No duplicate records exist for the specified fields.
+
+- **Step 5: Apply Data Consistency Check**
+  - **Implementation:** Validate `quantity` is positive and date columns are in `YYYY-MM-DD` format.
+  - **Acceptance Criteria:** All records pass the consistency checks.
+
+- **Step 6: Generate Data Quality Results DataFrame**
+  - **Implementation:** Aggregate results into a DataFrame with `check_name`, `result`, and `pass_%`.
+  - **Acceptance Criteria:** DataFrame accurately reflects the results of all checks.
+
+- **Step 7: Implement Notification System**
+  - **Implementation:** Configure alerts for rule violations.
+  - **Acceptance Criteria:** Notifications are sent for any rule violations.
 
 4. Technical Considerations
-   - **Performance Requirements:**
-     - Ensure efficient processing of large datasets using Spark's distributed computing capabilities.
-     - Optimize data transformations to minimize execution time.
+- **Performance Requirements:**
+  - Ensure efficient processing of large datasets using Spark's distributed computing capabilities.
+  - Optimize data transformations to minimize execution time.
 
-   - **Security Considerations:**
-     - Ensure data privacy and protection by implementing access controls and encryption where necessary.
-     - Secure the notification mechanism to prevent unauthorized access.
+- **Security Considerations:**
+  - Ensure data access is restricted to authorized users.
+  - Implement data encryption for sensitive information.
 
-   - **Scalability Aspects:**
-     - Design the system to handle increasing data volumes by leveraging Spark's scalability.
-     - Ensure the notification system can handle a high volume of alerts without degradation in performance.
+- **Scalability Aspects:**
+  - Design the solution to handle increasing data volumes by leveraging Spark's scalability.
+  - Ensure the architecture supports additional data quality rules without significant refactoring.
