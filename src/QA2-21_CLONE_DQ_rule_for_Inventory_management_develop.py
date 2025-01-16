@@ -21,7 +21,6 @@ dq_results_df = spark.createDataFrame([], dq_result_schema)
 # Total number of records
 total_records = drug_inventory_df.count()
 
-# Data Quality Checks
 # Mandatory Fields Check
 mandatory_fields_check = drug_inventory_df.filter(
     col("product_ID").isNull() |
@@ -85,4 +84,3 @@ dq_results_df = dq_results_df.union(
 
 # Show the data quality results
 dq_results_df.show()
-
