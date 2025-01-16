@@ -1,65 +1,84 @@
 
-1. Component Architecture
-   - **Major Components and Interactions:**
-     - **Data Ingestion Component:** Reads data from the `agilisium_playground.purgo_playground.drug_inventory_management` table.
-     - **Data Quality Check Component:** Applies data quality rules as specified in the `DQ_rules_IM` sheet.
-     - **Notification Component:** Sends alerts if any data quality rule is violated.
-     - **Data Quality Dataframe Component:** Stores the results of data quality checks.
-   - **Input/Output Interfaces:**
-     - **Input:** Data from the `drug_inventory_management` table.
-     - **Output:** Data quality dataframe with columns `check_name`, `result`, and `pass_%`.
-   - **Dependencies and External Systems:**
-     - **Databricks Environment:** For executing PySpark/Spark SQL code.
-     - **Unity Catalog:** For accessing the `drug_inventory_management` table.
-     - **Notification System:** (e.g., email or logging system) for sending alerts.
+#### 1. Component Architecture
 
-2. Data Flow
-   - **Data Transformation Steps:**
-     1. **Load Data:** Read data from the `drug_inventory_management` table into a Spark DataFrame.
-     2. **Apply Data Quality Rules:**
-        - **Mandatory Fields Check:** Verify non-null values for specified fields.
-        - **Expiry Date Check:** Ensure `expiry_date` is greater than `purchase_date`.
-        - **Unique Check:** Ensure uniqueness of `Product ID` and `Batch number`.
-        - **Data Consistency Check:** Validate positive `quantity` and correct date format.
-     3. **Aggregate Results:** Calculate pass percentage for each rule.
-     4. **Store Results:** Populate the data quality dataframe.
-   - **Data Formats and Schemas:**
-     - **Input Schema:** As per the provided data schema.
-     - **Output Schema:** Data quality dataframe with columns:
-       - `check_name`: string
-       - `result`: string (values: "Pass", "Fail")
-       - `pass_%`: double
-   - **Validation Rules and Error Handling:**
-     - **Mandatory Fields Check:** Fail if any specified field is null.
-     - **Expiry Date Check:** Fail if `expiry_date` is not greater than `purchase_date`.
-     - **Unique Check:** Fail if duplicates are found.
-     - **Data Consistency Check:** Fail if `quantity` is not positive or date format is incorrect.
-     - **Error Handling:** Log errors and send notifications for failed checks.
+- **Major Components and Interactions:**
+  - **Data Ingestion Component:** Reads data from the `agilisium_playground.purgo_playground.drug_inventory_management` table.
+  - **Data Quality Rule Engine:** Applies data quality rules as specified in the `DQ_rules_IM` sheet.
+  - **Notification System:** Sends alerts if any data quality rule is violated.
+  - **Data Quality Dataframe Generator:** Creates a dataframe summarizing the results of the data quality checks.
 
-3. Implementation Steps
-   - **Step 1: Data Ingestion**
-     - **Implementation:** Use Spark SQL to load data into a DataFrame.
-     - **Acceptance Criteria:** DataFrame is successfully loaded with expected schema.
-   - **Step 2: Apply Data Quality Rules**
-     - **Implementation:** Implement each rule as a separate function in PySpark.
-     - **Acceptance Criteria:** Each rule function returns a boolean indicating pass/fail.
-   - **Step 3: Aggregate Results**
-     - **Implementation:** Calculate pass percentage for each rule.
-     - **Acceptance Criteria:** Pass percentage is correctly calculated and stored.
-   - **Step 4: Store Results in Data Quality Dataframe**
-     - **Implementation:** Create and populate the data quality dataframe.
-     - **Acceptance Criteria:** Data quality dataframe is populated with correct values.
-   - **Step 5: Notification System Integration**
-     - **Implementation:** Integrate with a notification system to alert on failures.
-     - **Acceptance Criteria:** Notifications are sent for any failed checks.
+- **Input/Output Interfaces:**
+  - **Input:** Data from the `drug_inventory_management` table.
+  - **Output:** Data quality dataframe with columns `check_name`, `result`, and `pass_%`.
 
-4. Technical Considerations
-   - **Performance Requirements:**
-     - Ensure efficient data processing using Spark's distributed computing capabilities.
-     - Optimize data transformations to minimize execution time.
-   - **Security Considerations:**
-     - Ensure data access is controlled via Unity Catalog permissions.
-     - Secure any sensitive data in notifications.
-   - **Scalability Aspects:**
-     - Design the solution to handle increasing data volumes by leveraging Spark's scalability.
-     - Ensure the notification system can handle a high volume of alerts if needed.
+- **Dependencies and External Systems:**
+  - **Databricks Environment:** For executing PySpark/Spark SQL code.
+  - **Excel Reader Library:** To read the `data_quality_mapping.xlsx` file.
+  - **Notification System:** (e.g., email or logging system) for alerting rule violations.
+
+#### 2. Data Flow
+
+- **Data Transformation Steps:**
+  1. **Load Data:** Read data from the `drug_inventory_management` table.
+  2. **Apply Data Quality Rules:**
+     - Check for null values in mandatory fields.
+     - Validate expiry dates against purchase dates.
+     - Ensure uniqueness of `Product ID` and `Batch number`.
+     - Validate data consistency for quantity and date formats.
+  3. **Generate Data Quality Dataframe:** Compile results into a summary dataframe.
+
+- **Data Formats and Schemas:**
+  - **Input Data Schema:** As provided in the `data_quality_mapping.xlsx`.
+  - **Data Quality Dataframe Schema:**
+    
+    | check_name | result | pass_% |
+    |------------|--------|--------|
+    | string     | string | double |
+    
+
+- **Validation Rules and Error Handling:**
+  - **Mandatory Fields Check:** Ensure fields are not null. Log error if null values are found.
+  - **Expiry Date Check:** Ensure `expiry_date` > `purchase_date`. Log error if violated.
+  - **Unique Check:** Ensure uniqueness of `Product ID` and `Batch number`. Log duplicates.
+  - **Data Consistency Check:** Validate positive quantity and date format. Log inconsistencies.
+
+#### 3. Implementation Steps
+
+1. **Setup Environment:**
+   - Configure Databricks workspace and import necessary libraries.
+
+2. **Load Data:**
+   - Use PySpark to read data from the `drug_inventory_management` table.
+
+3. **Read Data Quality Rules:**
+   - Parse the `DQ_rules_IM` sheet from `data_quality_mapping.xlsx`.
+
+4. **Implement Data Quality Checks:**
+   - **Step 1:** Implement mandatory fields check.
+     - **Acceptance Criteria:** All mandatory fields are non-null.
+   - **Step 2:** Implement expiry date check.
+     - **Acceptance Criteria:** All expiry dates are greater than purchase dates.
+   - **Step 3:** Implement uniqueness check.
+     - **Acceptance Criteria:** No duplicate `Product ID` and `Batch number`.
+   - **Step 4:** Implement data consistency check.
+     - **Acceptance Criteria:** All quantities are positive and dates are in YYYY-MM-DD format.
+
+5. **Generate Data Quality Dataframe:**
+   - Compile results into a dataframe with `check_name`, `result`, and `pass_%`.
+
+6. **Notification System Integration:**
+   - Implement notification logic for rule violations.
+
+#### 4. Technical Considerations
+
+- **Performance Requirements:**
+  - Optimize Spark jobs for efficient processing of large datasets.
+  - Use caching and partitioning strategies to improve performance.
+
+- **Security Considerations:**
+  - Ensure data access is restricted to authorized users.
+  - Implement data encryption for sensitive information.
+
+- **Scalability Aspects:**
+  - Design the solution to handle increasing data volumes.
+  - Utilize Databricks' auto-scaling features to manage resources efficiently.
