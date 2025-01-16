@@ -1,76 +1,77 @@
 import unittest
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DateType, DoubleType
-from pyspark.sql import functions as F
+from pyspark.sql.functions import col
+from pyspark.sql.types import StructType, StructField, StringType, DoubleType
 
 class DataQualityChecksTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         # Initialize Spark session
-        cls.spark = SparkSession.builder \
-            .appName("Data Quality Checks Test") \
-            .getOrCreate()
-
-        # Define schema for test data
-        schema = StructType([
-            StructField("product_ID", StringType(), True),
-            StructField("product_name", StringType(), True),
-            StructField("quantity", IntegerType(), True),
-            StructField("location", StringType(), True),
-            StructField("expiry_date", DateType(), True),
-            StructField("purchase_date", DateType(), True),
-            StructField("batch_number", StringType(), True),
-            StructField("supplier_ID", StringType(), True)
+        cls.spark = SparkSession.builder.appName("DataQualityChecksTest").getOrCreate()
+        # Load the drug_inventory_management table into a DataFrame
+        cls.drug_inventory_df = cls.spark.read.format("csv").option("header", "true").load("path_to_drug_inventory_management.csv")
+        # Define the schema for the data quality result DataFrame
+        cls.dq_result_schema = StructType([
+            StructField("check_name", StringType(), False),
+            StructField("result", StringType(), False),
+            StructField("pass_%", DoubleType(), False)
         ])
+        # Total number of records
+        cls.total_records = cls.drug_inventory_df.count()
 
-        # Create test data
-        cls.test_data = [
-            ("P001", "Product A", 10, "Location 1", "2023-12-31", "2023-01-01", "B001", "S001"),
-            ("P002", "Product B", 0, "Location 2", "2023-01-01", "2023-01-01", "B002", "S002"),
-            ("P003", None, 5, "Location 3", "2023-01-01", "2023-01-01", "B003", "S003"),
-            ("P004", "Product D", 15, "Location 4", "2022-12-31", "2023-01-01", "B004", "S004"),
-            ("P005", "Product E", 20, "Location 5", "2023-12-31", "2023-01-01", "B005", "S005"),
-            ("P001", "Product A", 10, "Location 1", "2023-12-31", "2023-01-01", "B001", "S001")  # Duplicate
-        ]
+    def test_mandatory_fields_check(self):
+        # Test case: All mandatory fields are present
+        mandatory_fields_check = self.drug_inventory_df.filter(
+            col("product_ID").isNull() |
+            col("product_name").isNull() |
+            col("quantity").isNull() |
+            col("location").isNull() |
+            col("expiry_date").isNull() |
+            col("batch_number").isNull() |
+            col("supplier_ID").isNull()
+        ).count()
 
-        # Create DataFrame from test data
-        cls.df = cls.spark.createDataFrame(cls.test_data, schema)
+        mandatory_fields_pass_percentage = ((self.total_records - mandatory_fields_check) / self.total_records) * 100
+        result = "Pass" if mandatory_fields_check == 0 else "Fail"
+        self.assertEqual(result, "Pass", "Mandatory Fields Check failed")
+        self.assertGreaterEqual(mandatory_fields_pass_percentage, 100.0, "Mandatory Fields Check pass percentage is not 100%")
+
+    def test_expiry_date_check(self):
+        # Test case: Expiry date is greater than purchase date
+        expiry_date_check = self.drug_inventory_df.filter(
+            col("expiry_date") <= col("purchase_date")
+        ).count()
+
+        expiry_date_pass_percentage = ((self.total_records - expiry_date_check) / self.total_records) * 100
+        result = "Pass" if expiry_date_check == 0 else "Fail"
+        self.assertEqual(result, "Pass", "Expiry Date Check failed")
+        self.assertGreaterEqual(expiry_date_pass_percentage, 100.0, "Expiry Date Check pass percentage is not 100%")
+
+    def test_unique_check(self):
+        # Test case: Ensure Product ID and Batch number are unique
+        unique_check = self.drug_inventory_df.groupBy("product_ID", "batch_number").count().filter("count > 1").count()
+
+        unique_pass_percentage = ((self.total_records - unique_check) / self.total_records) * 100
+        result = "Pass" if unique_check == 0 else "Fail"
+        self.assertEqual(result, "Pass", "Unique Check failed")
+        self.assertGreaterEqual(unique_pass_percentage, 100.0, "Unique Check pass percentage is not 100%")
+
+    def test_data_consistency_check(self):
+        # Test case: Ensure quantity is positive and date format is correct
+        data_consistency_check = self.drug_inventory_df.filter(
+            (col("quantity") <= 0) |
+            (~col("expiry_date").rlike("^\d{4}-\d{2}-\d{2}$"))
+        ).count()
+
+        data_consistency_pass_percentage = ((self.total_records - data_consistency_check) / self.total_records) * 100
+        result = "Pass" if data_consistency_check == 0 else "Fail"
+        self.assertEqual(result, "Pass", "Data Consistency Check failed")
+        self.assertGreaterEqual(data_consistency_pass_percentage, 100.0, "Data Consistency Check pass percentage is not 100%")
 
     @classmethod
     def tearDownClass(cls):
         cls.spark.stop()
-
-    def test_mandatory_fields_check(self):
-        # Test for non-null mandatory fields
-        result_df = self.df.filter(
-            F.col("product_ID").isNull() |
-            F.col("product_name").isNull() |
-            F.col("quantity").isNull() |
-            F.col("location").isNull() |
-            F.col("expiry_date").isNull() |
-            F.col("batch_number").isNull() |
-            F.col("supplier_ID").isNull()
-        )
-        self.assertEqual(result_df.count(), 1, "Mandatory fields check failed")
-
-    def test_expiry_date_check(self):
-        # Test for expiry_date > purchase_date
-        result_df = self.df.filter(F.col("expiry_date") <= F.col("purchase_date"))
-        self.assertEqual(result_df.count(), 1, "Expiry date check failed")
-
-    def test_unique_check(self):
-        # Test for uniqueness of Product ID and Batch number
-        result_df = self.df.groupBy("product_ID", "batch_number").count().filter("count > 1")
-        self.assertEqual(result_df.count(), 1, "Unique check failed")
-
-    def test_data_consistency_check(self):
-        # Test for positive quantity and correct date format
-        result_df = self.df.filter(
-            (F.col("quantity") <= 0) |
-            (~F.col("expiry_date").cast(StringType()).rlike('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'))
-        )
-        self.assertEqual(result_df.count(), 1, "Data consistency check failed")
 
 if __name__ == '__main__':
     unittest.main()
