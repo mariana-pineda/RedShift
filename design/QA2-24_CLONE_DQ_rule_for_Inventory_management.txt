@@ -1,0 +1,95 @@
+
+#### 1. Component Architecture
+
+- **Major Components and Interactions:**
+  - **Data Ingestion Component:** Reads data from the `agilisium_playground.purgo_playground.drug_inventory_management` table.
+  - **Data Quality Rule Engine:** Applies data quality rules as defined in the `DQ_rules_IM` sheet.
+  - **Notification System:** Sends alerts if any data quality rule is violated.
+  - **Data Quality Result Dataframe:** Stores the results of the data quality checks.
+
+- **Input/Output Interfaces:**
+  - **Input:** 
+    - Source: `agilisium_playground.purgo_playground.drug_inventory_management` table.
+    - Format: Spark DataFrame.
+  - **Output:**
+    - Data Quality Result DataFrame with columns: `check_name`, `result`, `pass_%`.
+
+- **Dependencies and External Systems:**
+  - **Databricks Environment:** For executing PySpark/Spark SQL code.
+  - **Excel Reader Library:** To read `data_quality_mapping.xlsx`.
+  - **Notification System:** For sending alerts (e.g., email, logging system).
+
+#### 2. Data Flow
+
+- **Data Transformation Steps:**
+  1. **Load Data:** Read data from the `drug_inventory_management` table into a Spark DataFrame.
+  2. **Apply Data Quality Rules:**
+     - **Mandatory Fields Check:** Verify non-null values for specified fields.
+     - **Expiry Date Check:** Ensure `expiry_date` > `purchase_date`.
+     - **Unique Check:** Validate uniqueness of `Product ID` and `Batch number`.
+     - **Data Consistency Check:** Ensure positive `quantity` and correct date formats.
+
+- **Data Formats and Schemas:**
+  - **Input Schema:** As defined in the `drug_inventory_management` table.
+  - **Output Schema:** 
+    
+    StructType([
+        StructField("check_name", StringType(), True),
+        StructField("result", StringType(), True),
+        StructField("pass_%", DoubleType(), True)
+    ])
+    
+
+- **Validation Rules and Error Handling:**
+  - **Mandatory Fields Check:** 
+    - Rule: Fields must not be null.
+    - Error Handling: Log missing fields and notify.
+  - **Expiry Date Check:**
+    - Rule: `expiry_date` must be greater than `purchase_date`.
+    - Error Handling: Log invalid dates and notify.
+  - **Unique Check:**
+    - Rule: `Product ID` and `Batch number` must be unique.
+    - Error Handling: Log duplicates and notify.
+  - **Data Consistency Check:**
+    - Rule: `quantity` > 0 and date format `YYYY-MM-DD`.
+    - Error Handling: Log inconsistencies and notify.
+
+#### 3. Implementation Steps
+
+- **Step 1: Data Ingestion**
+  - Load data from the `drug_inventory_management` table.
+  - Acceptance Criteria: Data is successfully loaded into a Spark DataFrame.
+
+- **Step 2: Apply Mandatory Fields Check**
+  - Implement logic to check for non-null values.
+  - Acceptance Criteria: All mandatory fields are validated for non-null values.
+
+- **Step 3: Apply Expiry Date Check**
+  - Implement logic to compare `expiry_date` and `purchase_date`.
+  - Acceptance Criteria: All records with valid expiry dates are identified.
+
+- **Step 4: Apply Unique Check**
+  - Implement logic to ensure uniqueness of `Product ID` and `Batch number`.
+  - Acceptance Criteria: All records are validated for uniqueness.
+
+- **Step 5: Apply Data Consistency Check**
+  - Implement logic to check positive `quantity` and date formats.
+  - Acceptance Criteria: All records are validated for data consistency.
+
+- **Step 6: Generate Data Quality Result DataFrame**
+  - Compile results into the specified DataFrame structure.
+  - Acceptance Criteria: DataFrame is created with accurate results for each check.
+
+#### 4. Technical Considerations
+
+- **Performance Requirements:**
+  - Ensure efficient data processing using Spark's distributed computing capabilities.
+  - Optimize data transformations to minimize execution time.
+
+- **Security Considerations:**
+  - Ensure data access is restricted to authorized users.
+  - Implement logging for audit trails of data quality checks.
+
+- **Scalability Aspects:**
+  - Design the solution to handle increasing data volumes.
+  - Utilize Spark's scalability features to distribute workload across clusters.
