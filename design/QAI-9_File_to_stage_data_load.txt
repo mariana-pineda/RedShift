@@ -1,63 +1,72 @@
 
-1. Component Architecture
-   - **Major Components and Interactions:**
-     - **Data Ingestion Component:** Responsible for reading the CSV files `d_product_revenue.csv` and `customer.csv` from the specified paths.
-     - **Data Transformation Component:** Performs the necessary transformations as per the mapping document, including joining the datasets and creating a `surrogate_key`.
-     - **Data Output Component:** Outputs the transformed data into the target table format.
+#### 1. Component Architecture
 
-   - **Input/Output Interfaces:**
-     - **Input:** 
-       - `d_product_revenue.csv` located at `/Volumes/agilisium_playground/purgo_playground/d_product_revenue_csv/d_product_revenue.csv`
-       - `customer.csv` located at `/Volumes/agilisium_playground/purgo_playground/d_product_revenue_csv/customer.csv`
-     - **Output:** Transformed data with a `surrogate_key` and other mapped columns.
+- **Major Components and Interactions:**
+  - **CSV Reader Component:** Reads `d_product_revenue.csv` and `customer.csv` from the specified file paths.
+  - **Data Transformation Component:** Performs the join operation and transformation logic as specified in the mapping document.
+  - **SQL Query Executor:** Executes the Databricks SQL query to produce the final output.
+  
+- **Input/Output Interfaces:**
+  - **Input:** 
+    - `d_product_revenue.csv` located at `/Volumes/agilisium_playground/purgo_playground/d_product_revenue_csv/d_product_revenue.csv`
+    - `customer.csv` located at `/Volumes/agilisium_playground/purgo_playground/d_product_revenue_csv/customer.csv`
+  - **Output:** 
+    - Resultant dataset with a `surrogate_key` column, ready for further processing or storage.
 
-   - **Dependencies and External Systems:**
-     - **Databricks Environment:** For executing SQL queries and handling data processing.
-     - **File System Access:** Ensure access to the specified file paths for reading the CSV files.
+- **Dependencies and External Systems:**
+  - **Databricks Environment:** Required for executing SQL queries.
+  - **File System Access:** Necessary for reading the CSV files from the specified paths.
 
-2. Data Flow
-   - **Data Transformation Steps:**
-     1. Read `d_product_revenue.csv` and `customer.csv` into Databricks as DataFrames.
-     2. Perform a left join on the DataFrames using `customer_id` as the key.
-     3. Concatenate all columns from the joined DataFrame to create a string.
-     4. Hash the concatenated string to generate the `surrogate_key`.
-     5. Map other columns as specified in the `mapping_doc_product_revenue_customer.xlsx`.
+#### 2. Data Flow
 
-   - **Data Formats and Schemas:**
-     - **CSV Input Format:** Comma-separated values with headers.
-     - **Target Schema:** Includes `surrogate_key` and other columns as per the mapping document.
+- **Data Transformation Steps:**
+  1. **Read CSV Files:** Load `d_product_revenue.csv` and `customer.csv` into DataFrames.
+  2. **Join Operation:** Perform a left join on `customer_id` between the two DataFrames.
+  3. **Surrogate Key Generation:** Concatenate all columns post-join and apply a hashing function (e.g., SHA-256) to generate the `surrogate_key`.
 
-   - **Validation Rules and Error Handling:**
-     - Validate the presence of `customer_id` in both source files before joining.
-     - Handle null values by replacing them with default values or excluding them from the concatenation.
-     - Log errors encountered during file reading or data transformation.
+- **Data Formats and Schemas:**
+  - **CSV Format:** Assumed to be comma-separated with headers.
+  - **Schema for `customer.csv`:** As defined in the provided SQL table creation script.
+  - **Schema for `d_product_revenue.csv`:** To be inferred from the CSV file.
 
-3. Implementation Steps
-   - **Step 1: Data Ingestion**
-     - Implement a function to read CSV files into DataFrames.
-     - **Acceptance Criteria:** DataFrames are successfully created from the CSV files.
+- **Validation Rules and Error Handling:**
+  - **Validation Rules:**
+    - Ensure `customer_id` exists in both datasets before joining.
+    - Validate data types as per the target schema.
+  - **Error Handling:**
+    - Log errors for missing `customer_id` values.
+    - Handle data type mismatches by logging and skipping erroneous records.
 
-   - **Step 2: Data Joining**
-     - Implement a SQL query to perform a left join on `customer_id`.
-     - **Acceptance Criteria:** Joined DataFrame contains all columns from both source files.
+#### 3. Implementation Steps
 
-   - **Step 3: Surrogate Key Generation**
-     - Implement a function to concatenate all columns and hash the result.
-     - **Acceptance Criteria:** `surrogate_key` is correctly generated for each row.
+- **Development Steps:**
+  1. **Setup Databricks Environment:** Ensure access to the file system and necessary permissions.
+  2. **Read CSV Files:** Use Databricks utilities to load the CSV files into DataFrames.
+  3. **Perform Join Operation:** Execute a left join on `customer_id`.
+  4. **Generate Surrogate Key:** Concatenate columns and apply SHA-256 hashing.
+  5. **Write SQL Query:** Formulate the final SQL query incorporating all transformations.
 
-   - **Step 4: Data Mapping and Output**
-     - Map columns to the target schema and output the result.
-     - **Acceptance Criteria:** Output matches the target schema as defined in the mapping document.
+- **Order of Implementation:**
+  1. Setup environment and read CSV files.
+  2. Implement and test the join operation.
+  3. Develop and validate the surrogate key generation logic.
+  4. Write and test the complete SQL query.
 
-4. Technical Considerations
-   - **Performance Requirements:**
-     - Optimize the SQL query for efficient execution, considering the volume of data.
-     - Use indexing on `customer_id` if necessary to speed up the join operation.
+- **Acceptance Criteria:**
+  - Successful reading and joining of CSV files.
+  - Correct generation of `surrogate_key` for all records.
+  - SQL query executes without errors and produces expected results.
 
-   - **Security Considerations:**
-     - Ensure that file paths and data are accessed securely within the Databricks environment.
-     - Implement access controls to restrict unauthorized access to the data.
+#### 4. Technical Considerations
 
-   - **Scalability Aspects:**
-     - Design the solution to handle increasing data volumes by leveraging Databricks' distributed computing capabilities.
-     - Consider partitioning the data based on relevant columns to improve query performance.
+- **Performance Requirements:**
+  - Optimize the SQL query for efficient execution on large datasets.
+  - Use indexing on `customer_id` if possible to speed up join operations.
+
+- **Security Considerations:**
+  - Ensure data access permissions are correctly configured in Databricks.
+  - Use secure methods for handling sensitive data, especially during surrogate key generation.
+
+- **Scalability Aspects:**
+  - Design the solution to handle increasing data volumes by leveraging Databricks' distributed computing capabilities.
+  - Consider partitioning large datasets to improve query performance.
