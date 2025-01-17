@@ -1,0 +1,63 @@
+
+1. Component Architecture
+   - **Major Components and Interactions:**
+     - **Data Ingestion Component:** Responsible for reading the CSV files `d_product_revenue.csv` and `customer.csv` from the specified paths.
+     - **Data Transformation Component:** Performs the necessary transformations as per the mapping document, including joining the datasets and creating a `surrogate_key`.
+     - **Data Output Component:** Outputs the transformed data into the target table format.
+
+   - **Input/Output Interfaces:**
+     - **Input:** 
+       - `d_product_revenue.csv` located at `/Volumes/agilisium_playground/purgo_playground/d_product_revenue_csv/d_product_revenue.csv`
+       - `customer.csv` located at `/Volumes/agilisium_playground/purgo_playground/d_product_revenue_csv/customer.csv`
+     - **Output:** Transformed data with a `surrogate_key` and other mapped columns.
+
+   - **Dependencies and External Systems:**
+     - **Databricks Environment:** For executing SQL queries and handling data processing.
+     - **File System Access:** Ensure access to the specified file paths for reading the CSV files.
+
+2. Data Flow
+   - **Data Transformation Steps:**
+     1. Read `d_product_revenue.csv` and `customer.csv` into Databricks as DataFrames.
+     2. Perform a left join on the DataFrames using `customer_id` as the key.
+     3. Concatenate all columns from the joined DataFrame to create a string.
+     4. Hash the concatenated string to generate the `surrogate_key`.
+     5. Map other columns as specified in the `mapping_doc_product_revenue_customer.xlsx`.
+
+   - **Data Formats and Schemas:**
+     - **CSV Input Format:** Comma-separated values with headers.
+     - **Target Schema:** Includes `surrogate_key` and other columns as per the mapping document.
+
+   - **Validation Rules and Error Handling:**
+     - Validate the presence of `customer_id` in both source files before joining.
+     - Handle null values by replacing them with default values or excluding them from the concatenation.
+     - Log errors encountered during file reading or data transformation.
+
+3. Implementation Steps
+   - **Step 1: Data Ingestion**
+     - Implement a function to read CSV files into DataFrames.
+     - **Acceptance Criteria:** DataFrames are successfully created from the CSV files.
+
+   - **Step 2: Data Joining**
+     - Implement a SQL query to perform a left join on `customer_id`.
+     - **Acceptance Criteria:** Joined DataFrame contains all columns from both source files.
+
+   - **Step 3: Surrogate Key Generation**
+     - Implement a function to concatenate all columns and hash the result.
+     - **Acceptance Criteria:** `surrogate_key` is correctly generated for each row.
+
+   - **Step 4: Data Mapping and Output**
+     - Map columns to the target schema and output the result.
+     - **Acceptance Criteria:** Output matches the target schema as defined in the mapping document.
+
+4. Technical Considerations
+   - **Performance Requirements:**
+     - Optimize the SQL query for efficient execution, considering the volume of data.
+     - Use indexing on `customer_id` if necessary to speed up the join operation.
+
+   - **Security Considerations:**
+     - Ensure that file paths and data are accessed securely within the Databricks environment.
+     - Implement access controls to restrict unauthorized access to the data.
+
+   - **Scalability Aspects:**
+     - Design the solution to handle increasing data volumes by leveraging Databricks' distributed computing capabilities.
+     - Consider partitioning the data based on relevant columns to improve query performance.
