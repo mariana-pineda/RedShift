@@ -1,0 +1,71 @@
+Technical Design Specification
+
+1. Component Architecture
+
+- Define the major components and their interactions:
+  - **Database Schema**: The primary component involves modifications to the existing database schema for the `Employees` and `Customers` tables.
+  - **Stored Procedures and Views**: Ensure that stored procedures and views that interact with these tables are updated to accommodate the new columns.
+
+- Specify input/output interfaces:
+  - **Employees Table**: Input is the new `lastdate` column of type `date` with a default value of the current date. Output is the updated table schema.
+  - **Customers Table**: Input is the new `categoryGroup` column of type `string` with predefined categories. Output is the updated table schema.
+
+- Identify dependencies and external systems:
+  - **Database Management System (DBMS)**: The changes are dependent on the capabilities of the DBMS to handle schema alterations.
+  - **Application Layer**: Any application logic that interacts with these tables may need updates to handle the new columns.
+
+2. Data Flow
+
+- Detail the data transformation steps:
+  - **Employees Table**:
+    1. Add `lastdate` column to the table.
+    2. Set default value to the current date for all existing records.
+  - **Customers Table**:
+    1. Add `categoryGroup` column to the table.
+    2. Set default value to "Uncategorized" for all existing records.
+    3. Implement validation for predefined categories.
+
+- Specify data formats and schemas:
+  - **Employees Table**: 
+    - `lastdate` column: `DATE` type.
+  - **Customers Table**: 
+    - `categoryGroup` column: `NVARCHAR(20)` type with a check constraint for valid categories.
+
+- Define validation rules and error handling:
+  - **Employees Table**: Ensure `lastdate` is not null and defaults to the current date.
+  - **Customers Table**: Use a check constraint to enforce valid `categoryGroup` values ("VIP", "Regular", "New"). Handle invalid entries by rejecting them with an error message.
+
+3. Implementation Steps
+
+- Break down the development into concrete steps:
+  1. **Modify Employees Table**:
+     - Alter table to add `lastdate` column.
+     - Update existing records to set `lastdate` to the current date.
+  2. **Modify Customers Table**:
+     - Alter table to add `categoryGroup` column.
+     - Update existing records to set `categoryGroup` to "Uncategorized".
+     - Add check constraint for `categoryGroup`.
+  3. **Update Stored Procedures and Views**:
+     - Review and update any stored procedures or views that reference the modified tables.
+
+- Specify the order of implementation:
+  1. Modify Employees Table.
+  2. Modify Customers Table.
+  3. Update Stored Procedures and Views.
+
+- Define acceptance criteria for each step:
+  - **Employees Table**: `lastdate` column exists with correct default value for all records.
+  - **Customers Table**: `categoryGroup` column exists with correct default and validation.
+  - **Stored Procedures and Views**: All relevant procedures and views function correctly with the updated schema.
+
+4. Technical Considerations
+
+- Performance requirements:
+  - Ensure that the addition of columns does not significantly degrade query performance. Indexes may need to be reviewed.
+
+- Security considerations:
+  - Ensure that the new columns do not expose sensitive information. Access controls should be reviewed to ensure proper permissions.
+
+- Scalability aspects:
+  - The schema changes should not impact the scalability of the database. Ensure that the database can handle increased load with the new columns.
+
