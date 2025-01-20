@@ -1,0 +1,37 @@
+Feature: Train a Random Forest Model on Wine Quality Dataset
+
+  Background:
+    Given the wine quality dataset is located at "/dbfs/databricks-datasets/wine-quality/winequality-white.csv"
+    And the dataset uses ";" as a separator
+    And the experiment results should be stored in "/Workspace/Shared/purgo_poc/winequality-experiement"
+
+  Scenario: Preprocess the Wine Quality Dataset
+    Given the dataset is loaded into a DataFrame
+    When the "quality" column is transformed into a binary "high_quality" column
+    Then "high_quality" is true if "quality" > 6, otherwise false
+    And a new column "timestamp" is added with the current timestamp
+
+  Scenario: Split the Dataset
+    Given the dataset is preprocessed
+    When the dataset is split into training, validation, and test sets
+    Then 60% of the data is used for training
+    And 20% of the data is used for validation
+    And 20% of the data is used for testing
+
+  Scenario: Train a Random Forest Model
+    Given the training dataset is ready
+    When a random forest model is trained on the training dataset
+    Then the model is validated using the validation dataset
+    And the model is tested using the test dataset
+
+  Scenario: Log Experiment Results
+    Given the model training is complete
+    When the experiment results are logged
+    Then the results are stored in "/Workspace/Shared/purgo_poc/winequality-experiement"
+    And the experiment is tracked using MLflow
+
+  Scenario: Generate Python Code for Databricks Notebook
+    Given the requirements for the Databricks notebook
+    When the Python code is generated
+    Then the code starts with "# Databricks notebook source"
+    And the code includes all steps for data loading, preprocessing, splitting, training, and logging
