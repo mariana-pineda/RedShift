@@ -1,0 +1,114 @@
+
+## 1. Component Architecture
+
+- **Major Components and Interactions:**
+  - **Data Ingestion Component:** Reads the wine dataset from the specified CSV file.
+  - **Data Preprocessing Component:** Transforms the `quality` column into a boolean `high_quality` column.
+  - **Data Splitting Component:** Splits the dataset into training, validation, and test sets.
+  - **Model Training Component:** Trains a Random Forest model using the training dataset.
+  - **Model Evaluation Component:** Evaluates the model using the validation and test datasets.
+  - **Experiment Tracking Component:** Logs the experiment details to MLflow.
+
+- **Input/Output Interfaces:**
+  - **Input:** CSV file located at `/dbfs/databricks-datasets/wine-quality/winequality-white.csv`.
+  - **Output:** Trained Random Forest model and experiment logs stored in `/Workspace/Shared/purgo_poc/winequality-experiment`.
+
+- **Dependencies and External Systems:**
+  - **Databricks Environment:** For running the notebook and accessing the dataset.
+  - **MLflow:** For experiment tracking and logging.
+  - **Scikit-learn:** For implementing the Random Forest model.
+
+## 2. Data Flow
+
+- **Data Transformation Steps:**
+  1. **Read CSV File:** Load the dataset using Pandas with `;` as the separator.
+  2. **Transform Quality Column:** Convert the `quality` column to `high_quality` boolean column (`True` if `quality > 6`, else `False`).
+
+- **Data Formats and Schemas:**
+  - **Input Data Schema:** CSV with columns including `fixed acidity`, `volatile acidity`, ..., `quality`.
+  - **Transformed Data Schema:** DataFrame with columns including `fixed acidity`, `volatile acidity`, ..., `high_quality`.
+
+- **Validation Rules and Error Handling:**
+  - **Validation Rules:** Ensure no missing values in the `quality` column before transformation.
+  - **Error Handling:** Log errors if the CSV file cannot be read or if transformation fails.
+
+## 3. Implementation Steps
+
+1. **Data Ingestion:**
+   - **Step:** Read the CSV file into a Pandas DataFrame.
+   - **Acceptance Criteria:** DataFrame is successfully created with the correct number of rows and columns.
+
+2. **Data Preprocessing:**
+   - **Step:** Transform the `quality` column to `high_quality`.
+   - **Acceptance Criteria:** DataFrame contains a `high_quality` column with boolean values.
+
+3. **Data Splitting:**
+   - **Step:** Split the data into training (60%), validation (20%), and test (20%) sets.
+   - **Acceptance Criteria:** Three datasets are created with the correct proportions.
+
+4. **Model Training:**
+   - **Step:** Train a Random Forest model on the training dataset.
+   - **Acceptance Criteria:** Model is trained without errors and is ready for evaluation.
+
+5. **Model Evaluation:**
+   - **Step:** Evaluate the model on the validation and test datasets.
+   - **Acceptance Criteria:** Evaluation metrics are logged and meet predefined thresholds.
+
+6. **Experiment Tracking:**
+   - **Step:** Log the experiment details to MLflow.
+   - **Acceptance Criteria:** Experiment is logged in the specified MLflow path.
+
+## 4. Technical Considerations
+
+- **Performance Requirements:**
+  - Ensure the model training and evaluation are completed within a reasonable time frame, leveraging Databricks' distributed computing capabilities.
+
+- **Security Considerations:**
+  - Ensure that access to the dataset and MLflow tracking server is secured and restricted to authorized users only.
+
+- **Scalability Aspects:**
+  - The solution should be scalable to handle larger datasets by leveraging Databricks' scalable infrastructure and parallel processing capabilities.
+
+
+# Databricks notebook source
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+import mlflow
+import mlflow.sklearn
+
+# Load the dataset
+data_path = '/dbfs/databricks-datasets/wine-quality/winequality-white.csv'
+data = pd.read_csv(data_path, sep=';')
+
+# Transform the quality column
+data['high_quality'] = data['quality'] > 6
+data.drop('quality', axis=1, inplace=True)
+
+# Split the data
+train, temp = train_test_split(data, test_size=0.4, random_state=42)
+validate, test = train_test_split(temp, test_size=0.5, random_state=42)
+
+# Separate features and target
+X_train = train.drop('high_quality', axis=1)
+y_train = train['high_quality']
+X_validate = validate.drop('high_quality', axis=1)
+y_validate = validate['high_quality']
+X_test = test.drop('high_quality', axis=1)
+y_test = test['high_quality']
+
+# Train the model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Evaluate the model
+validation_score = model.score(X_validate, y_validate)
+test_score = model.score(X_test, y_test)
+
+# Log the experiment
+mlflow.set_experiment('/Workspace/Shared/purgo_poc/winequality-experiment')
+with mlflow.start_run():
+    mlflow.log_param("n_estimators", 100)
+    mlflow.log_metric("validation_score", validation_score)
+    mlflow.log_metric("test_score", test_score)
+    mlflow.sklearn.log_model(model, "model")
