@@ -1,0 +1,39 @@
+Feature: Data Quality Checks for Drug Inventory Management
+
+  Background:
+    Given the drug_inventory_management table is available
+    And the data quality rules are defined in the DQ_rules_IM sheet
+
+  Scenario Outline: Validate Data Quality Rules
+    Given the data from the drug_inventory_management table
+    When the data quality rule "<Rule_Name>" is applied
+    Then the result should be "<Expected_Result>"
+    And the pass percentage should be calculated
+
+    Examples:
+      | Rule_Name                | Expected_Result |
+      | Mandatory Fields Check   | Pass/Fail       |
+      | Expiry Date Check        | Pass/Fail       |
+      | Unique Check             | Pass/Fail       |
+      | Data Consistency Check   | Pass/Fail       |
+
+  Scenario: Generate Data Quality Dataframe
+    Given the data quality checks have been performed
+    When the results are aggregated
+    Then a data quality dataframe should be created with the following structure:
+      | check_name              | result | pass_% |
+      | Mandatory Fields Check  | <result> | <pass_%> |
+      | Expiry Date Check       | <result> | <pass_%> |
+      | Unique Check            | <result> | <pass_%> |
+      | Data Consistency Check  | <result> | <pass_%> |
+
+  Scenario: Notification of Rule Violations
+    Given a data quality rule has been violated
+    When the violation is detected
+    Then a notification should be sent with details of the violation
+
+  Scenario: Error Handling During Data Quality Checks
+    Given an error occurs during the execution of a data quality check
+    When the error is encountered
+    Then the error should be logged
+    And the process should continue with the next check
