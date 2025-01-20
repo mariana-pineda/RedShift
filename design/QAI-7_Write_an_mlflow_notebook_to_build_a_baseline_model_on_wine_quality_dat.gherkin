@@ -1,16 +1,21 @@
-Feature: Train a Random Forest model on the Wine Quality dataset using MLflow in a Databricks notebook
+Feature: Train a Random Forest Model on Wine Quality Dataset
 
   Background:
     Given the wine quality dataset is located at "/dbfs/databricks-datasets/wine-quality/winequality-white.csv"
     And the dataset uses ";" as a separator
-    And the experiment is stored in "/Workspace/Shared/purgo_poc/winequality-experiement"
+    And the last column "quality" needs to be transformed to "high_quality" where true if quality > 6
 
-  Scenario: Train and evaluate a Random Forest model
-    Given the dataset is loaded into a DataFrame
-    When the data is split into 60% training, 20% validation, and 20% test sets
-    And the "quality" column is transformed into "high_quality" with true if quality > 6, otherwise false
-    And a Random Forest model is trained on the training set
-    Then the model is evaluated on the validation set
-    And the model is tested on the test set
-    And the experiment results are logged in MLflow
-    And the resulting Python code starts with "# Databricks notebook source"
+  Scenario: Prepare and Train the Model
+    Given the data is loaded from the specified CSV file
+    When the data is split into 60% training, 20% validation, and 20% testing sets
+    And the "quality" column is replaced with "high_quality" boolean column
+    Then a random forest model is trained on the training dataset
+
+  Scenario: Store Experiment Results
+    Given the model training is complete
+    When the experiment results are stored
+    Then the experiment is saved in "/Workspace/Shared/purgo_poc/winequality-experiment"
+
+  Scenario: Generate Databricks Notebook
+    Given the Python code is generated for the model training
+    Then the code includes "# Databricks notebook source" at the beginning
