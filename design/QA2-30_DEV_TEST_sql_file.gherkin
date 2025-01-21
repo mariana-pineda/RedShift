@@ -1,0 +1,135 @@
+Feature: SQL Schema and Table Creation
+
+  Background:
+    Given a SQL script for creating schema and tables in the purgo_playground schema
+
+  Scenario: Ensure Schema Exists
+    Given the schema "purgo_playground" does not exist
+    When the script is executed
+    Then the schema "purgo_playground" should be created
+
+  Scenario: Drop Existing Tables
+    Given the tables "programs", "interactions", "f_order", "f_item", "f_inv_movmnt", "f_events", "enrollments" exist in the "purgo_playground" schema
+    When the script is executed
+    Then these tables should be dropped
+
+  Scenario: Create Table "programs"
+    Given the table "programs" does not exist in the "purgo_playground" schema
+    When the script is executed
+    Then the table "programs" should be created with columns:
+      | program_id          | BIGINT   | NOT NULL |
+      | program_name        | STRING   | NOT NULL |
+      | country_code        | STRING   | NOT NULL |
+      | program_start_date  | TIMESTAMP|          |
+
+  Scenario: Create Table "interactions"
+    Given the table "interactions" does not exist in the "purgo_playground" schema
+    When the script is executed
+    Then the table "interactions" should be created with columns:
+      | interaction_id      | BIGINT   | NOT NULL |
+      | enrollment_id       | BIGINT   | NOT NULL |
+      | interaction_date    | TIMESTAMP|          |
+
+  Scenario: Create Table "f_order"
+    Given the table "f_order" does not exist in the "purgo_playground" schema
+    When the script is executed
+    Then the table "f_order" should be created with columns:
+      | order_nbr           | STRING   |          |
+      | order_type          | BIGINT   |          |
+      | delivery_dt         | DECIMAL(38, 0)|     |
+      | order_qty           | DOUBLE   |          |
+      | sched_dt            | DECIMAL(38, 0)|     |
+      | expected_shipped_dt | DECIMAL(38, 0)|     |
+      | actual_shipped_dt   | DECIMAL(38, 0)|     |
+      | order_line_nbr      | STRING   |          |
+      | loc_tracker_id      | STRING   |          |
+      | shipping_add        | STRING   |          |
+      | primary_qty         | DOUBLE   |          |
+      | open_qty            | DOUBLE   |          |
+      | shipped_qty         | DOUBLE   |          |
+      | order_desc          | STRING   |          |
+      | flag_return         | STRING   |          |
+      | flag_cancel         | STRING   |          |
+      | cancel_dt           | DECIMAL(38, 0)|     |
+      | cancel_qty          | DOUBLE   |          |
+      | crt_dt              | TIMESTAMP|          |
+      | updt_dt             | TIMESTAMP|          |
+
+  Scenario: Create Table "f_item"
+    Given the table "f_item" does not exist in the "purgo_playground" schema
+    When the script is executed
+    Then the table "f_item" should be created with columns:
+      | item_nbr            | STRING   |          |
+      | item_vb             | BIGINT   |          |
+      | delivery_dt         | DECIMAL(38, 0)|     |
+      | item_inv_type       | STRING   |          |
+      | txn_nbr             | STRING   |          |
+      | primary_qty         | DOUBLE   |          |
+      | qty_in_hand         | DOUBLE   |          |
+      | qty_on_hold         | DOUBLE   |          |
+      | item_serial_nbr     | STRING   |          |
+      | package_nbr         | STRING   |          |
+      | crt_dt              | TIMESTAMP|          |
+      | updt_dt             | TIMESTAMP|          |
+
+  Scenario: Create Table "f_inv_movmnt"
+    Given the table "f_inv_movmnt" does not exist in the "purgo_playground" schema
+    When the script is executed
+    Then the table "f_inv_movmnt" should be created with columns:
+      | txn_id              | STRING   |          |
+      | inv_loc             | STRING   |          |
+      | financial_qty       | DOUBLE   |          |
+      | net_qty             | DOUBLE   |          |
+      | expired_qt          | DECIMAL(38, 0)|     |
+      | item_nbr            | STRING   |          |
+      | unit_cost           | DOUBLE   |          |
+      | um_rate             | DOUBLE   |          |
+      | plant_loc_cd        | STRING   |          |
+      | inv_stock_reference | STRING   |          |
+      | stock_type          | STRING   |          |
+      | qty_on_hand         | DOUBLE   |          |
+      | qty_shipped         | DOUBLE   |          |
+      | cancel_dt           | DECIMAL(38, 0)|     |
+      | flag_active         | STRING   |          |
+      | crt_dt              | TIMESTAMP|          |
+      | updt_dt             | TIMESTAMP|          |
+
+  Scenario: Create Table "f_events"
+    Given the table "f_events" does not exist in the "purgo_playground" schema
+    When the script is executed
+    Then the table "f_events" should be created with columns:
+      | date                | STRING   |          |
+      | event_name          | STRING   |          |
+      | event_ts            | STRING   |          |
+      | user_pseudo_id      | STRING   |          |
+      | event_bundle_sequence_id | BIGINT |      |
+      | session_id          | BIGINT   |          |
+      | session_number      | BIGINT   |          |
+      | device_browser      | STRING   |          |
+      | device_category     | STRING   |          |
+      | city                | STRING   |          |
+      | country             | STRING   |          |
+      | region              | STRING   |          |
+      | page_title          | STRING   |          |
+      | adcontent           | STRING   |          |
+      | campaign            | STRING   |          |
+      | traffic_source      | STRING   |          |
+      | traffic_medium      | STRING   |          |
+      | referral_path       | STRING   |          |
+      | keyword             | STRING   |          |
+      | session_engaged     | STRING   |          |
+      | content             | STRING   |          |
+      | search_query        | STRING   |          |
+      | form_name           | STRING   |          |
+      | navigation_item_type| STRING   |          |
+      | navigation_item_name| STRING   |          |
+      | content_name        | STRING   |          |
+      | engagement_time     | BIGINT   |          |
+
+  Scenario: Create Table "enrollments"
+    Given the table "enrollments" does not exist in the "purgo_playground" schema
+    When the script is executed
+    Then the table "enrollments" should be created with columns:
+      | enrollment_id       | BIGINT   | NOT NULL |
+      | program_id          | BIGINT   | NOT NULL |
+      | enrollment_date     | TIMESTAMP|          |
