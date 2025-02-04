@@ -1,0 +1,30 @@
+Feature: Data Quality Checks for Drug Inventory Management
+
+  Background:
+    Given the Unity Catalog table "agilisium_playground.purgo_playground.drug_inventory_management" is available
+    And the data quality rules are defined in the "DQ_rules_IM" sheet of "data_quality_mapping.xlsx"
+
+  Scenario Outline: Validate Data Quality Rules
+    Given the data from the "drug_inventory_management" table
+    When the data quality rule "<Rule Name>" is applied
+    Then the result should be "<Expected Result>"
+    And the pass percentage should be "<Pass Percentage>"
+
+    Examples:
+      | Rule Name          | Expected Result | Pass Percentage |
+      | Rule1              | Pass            | 95%             |
+      | Rule2              | Fail            | 80%             |
+      | Rule3              | Pass            | 100%            |
+
+  Scenario: Generate Data Quality DataFrame
+    Given the data quality checks have been executed
+    When the results are compiled
+    Then a data quality dataframe should be created with the following structure:
+      | check_name | result | pass_% |
+    And the dataframe should include the overall result of each data quality category
+
+  Scenario: Notification on Rule Violation
+    Given a data quality rule is violated
+    When the violation is detected
+    Then a notification should be sent to the responsible team
+    And the issue should be logged for further investigation
