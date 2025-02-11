@@ -1,0 +1,67 @@
+Feature: Data Standardization for delivery_dt in f_order Table
+
+  Background:
+    Given the f_order table exists in the purgo_playground schema
+    And the delivery_dt column is of type DECIMAL(38, 0)
+
+  Scenario: Validate delivery_dt format is yyyymmdd
+    Given the delivery_dt column in the f_order table
+    When the data is queried
+    Then each value should be in the format yyyymmdd
+    And each value should be a valid date
+
+  Scenario: Check for non-compliant delivery_dt values
+    Given the delivery_dt column in the f_order table
+    When the data is queried
+    Then identify any values not in the format yyyymmdd
+    And log an error message "Invalid delivery_dt format"
+
+  Scenario Outline: Validate delivery_dt conversion from timestamp to decimal
+    Given a delivery_dt value <timestamp_value> in timestamp format
+    When converted to decimal
+    Then the result should be <decimal_value> in yyyymmdd format
+
+    Examples:
+      | timestamp_value     | decimal_value |
+      | 2024-09-10 00:00:00 | 20240910      |
+      | 2023-12-31 23:59:59 | 20231231      |
+
+  Scenario: Handle non-compliant delivery_dt values
+    Given the delivery_dt column in the f_order table
+    When a non-compliant value is detected
+    Then flag the record for review
+    And log an error message "Non-compliant delivery_dt detected"
+
+  Scenario: Ensure 100% compliance of delivery_dt format
+    Given the delivery_dt column in the f_order table
+    When the data is validated
+    Then all values should be in the format yyyymmdd
+    And all values should be DECIMAL(38, 0)
+
+  Scenario: Error handling for invalid delivery_dt values
+    Given the delivery_dt column in the f_order table
+    When an invalid value is encountered
+    Then log an error message "Invalid delivery_dt value"
+    And skip processing for the invalid record
+
+  Scenario Outline: Validate SQL logic for delivery_dt format
+    Given a SQL query to check delivery_dt format
+    When executed on the f_order table
+    Then the query should return <expected_result>
+
+    Examples:
+      | expected_result |
+      | 0               |  # No invalid formats
+      | 1               |  # At least one invalid format
+
+  Scenario: Frequency of execution for delivery_dt validation
+    Given the SQL logic for delivery_dt validation
+    When scheduled for execution
+    Then it should run daily
+    And log results to a monitoring system
+
+  Scenario: Logging and error reporting for delivery_dt validation
+    Given the SQL logic for delivery_dt validation
+    When executed
+    Then log all validation results
+    And report errors to the data governance team
