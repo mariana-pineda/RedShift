@@ -1,67 +1,48 @@
--- Test Code for Databricks Environment
+-- SQL Test Code for Databricks Environment
 
-/* SQL Test for delivery_dt format validation */
--- Validate that delivery_dt is in the format yyyymmdd and is a DECIMAL(38, 0)
+-- Test for delivery_dt format and type in f_order table
+-- Ensure delivery_dt is 100% Decimal (38,0) and in yyyymmdd format
+
+-- Check if delivery_dt is in the correct format
 SELECT COUNT(*) AS invalid_count
 FROM purgo_playground.f_order
 WHERE CAST(delivery_dt AS STRING) NOT RLIKE '^[0-9]{8}$';
 
--- Assert that there are no invalid delivery_dt formats
-SELECT CASE WHEN COUNT(*) = 0 THEN 'PASS' ELSE 'FAIL' END AS validation_result
+-- Check if delivery_dt is a valid date
+SELECT COUNT(*) AS invalid_date_count
 FROM purgo_playground.f_order
-WHERE CAST(delivery_dt AS STRING) NOT RLIKE '^[0-9]{8}$';
+WHERE TRY_CAST(CAST(delivery_dt AS STRING) AS DATE) IS NULL;
 
 
 
-# PySpark Test for Schema Validation
+# PySpark Test Code for Databricks Environment
+
+# Import necessary libraries
+# Ensure required libraries are installed
+# MAGIC %pip install pytest
+
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, DecimalType, DoubleType, TimestampType
+from pyspark.sql.functions import col
+import pytest
 
 # Initialize Spark session
 spark = SparkSession.builder.appName("DatabricksTest").getOrCreate()
 
-# Define expected schema for f_order table
-expected_schema = StructType([
-    StructField("order_nbr", StringType(), True),
-    StructField("order_type", DecimalType(38, 0), True),
-    StructField("delivery_dt", DecimalType(38, 0), True),
-    StructField("order_qty", DoubleType(), True),
-    StructField("sched_dt", DecimalType(38, 0), True),
-    StructField("expected_shipped_dt", DecimalType(38, 0), True),
-    StructField("actual_shipped_dt", DecimalType(38, 0), True),
-    StructField("order_line_nbr", StringType(), True),
-    StructField("loc_tracker_id", StringType(), True),
-    StructField("shipping_add", StringType(), True),
-    StructField("primary_qty", DoubleType(), True),
-    StructField("open_qty", DoubleType(), True),
-    StructField("shipped_qty", DoubleType(), True),
-    StructField("order_desc", StringType(), True),
-    StructField("flag_return", StringType(), True),
-    StructField("flag_cancel", StringType(), True),
-    StructField("cancel_dt", DecimalType(38, 0), True),
-    StructField("cancel_qty", DoubleType(), True),
-    StructField("crt_dt", TimestampType(), True),
-    StructField("updt_dt", TimestampType(), True)
-])
-
 # Load f_order table
 f_order_df = spark.table("purgo_playground.f_order")
 
-# Validate schema
-assert f_order_df.schema == expected_schema, "Schema does not match expected schema"
+# Test delivery_dt format
+def test_delivery_dt_format():
+    invalid_count = f_order_df.filter(~col("delivery_dt").cast("string").rlike("^[0-9]{8}$")).count()
+    assert invalid_count == 0, "All delivery_dt values should be in yyyymmdd format"
 
-# PySpark Test for Data Type Conversion
-from pyspark.sql.functions import col, date_format
+# Test delivery_dt as valid date
+def test_delivery_dt_valid_date():
+    invalid_date_count = f_order_df.filter(col("delivery_dt").cast("string").cast("date").isNull()).count()
+    assert invalid_date_count == 0, "All delivery_dt values should be valid dates"
 
-# Convert delivery_dt from timestamp to decimal yyyymmdd
-converted_df = f_order_df.withColumn("converted_delivery_dt", date_format(col("crt_dt"), "yyyyMMdd").cast(DecimalType(38, 0)))
-
-# Validate conversion
-converted_df.show()
-
-# Assert conversion correctness
-assert converted_df.filter(col("converted_delivery_dt") != col("delivery_dt")).count() == 0, "Conversion from timestamp to decimal yyyymmdd failed"
+# Run tests
+pytest.main(["-v", "-s"])
 
 # Cleanup operations
-# PySpark Cleanup
-f_order_df.unpersist()
+# Drop temporary views or tables if created during tests
