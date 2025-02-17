@@ -1,30 +1,57 @@
 Feature: Data Quality Checks for Drug Inventory Management
 
   Background:
-    Given the Unity Catalog table "agilisium_playground.purgo_playground.drug_inventory_management" is available
-    And the data quality rules are defined in the "DQ_rules_IM" sheet of "data_quality_mapping.xlsx"
+    Given the data quality rules are defined in the DQ_rules_IM sheet of data_quality_mapping.xlsx
+    And the drug_inventory_management table is located in agilisium_playground.purgo_playground
+    And the data quality results should be stored in the im_data_check table
 
   Scenario Outline: Validate Data Quality Rules
-    Given the data from the "drug_inventory_management" table
+    Given the drug_inventory_management table is loaded
     When the data quality rule "<Rule Name>" is applied
     Then the result should be "<Expected Result>"
-    And the pass percentage should be "<Pass Percentage>"
+    And the pass percentage should be calculated
+    And the result should be stored in the im_data_check table
 
     Examples:
-      | Rule Name          | Expected Result | Pass Percentage |
-      | Rule1              | Pass            | 95%             |
-      | Rule2              | Fail            | 80%             |
-      | Rule3              | Pass            | 100%            |
-
-  Scenario: Generate Data Quality DataFrame
-    Given the data quality checks have been executed
-    When the results are compiled
-    Then a data quality dataframe should be created with the following structure:
-      | check_name | result | pass_% |
-    And the dataframe should include the overall result of each data quality category
+      | Rule Name          | Expected Result |
+      | Non-null ProductID | Pass            |
+      | Valid Expiry Date  | Pass            |
+      | Non-negative Qty   | Pass            |
 
   Scenario: Notification on Rule Violation
     Given a data quality rule is violated
     When the violation is detected
-    Then a notification should be sent to the responsible team
-    And the issue should be logged for further investigation
+    Then a notification should be sent to stakeholders
+    And the notification should include the rule name and violation details
+
+  Scenario: Data Quality DataFrame Creation
+    Given the data quality checks are executed
+    When the results are aggregated
+    Then a data quality dataframe should be created
+    And the dataframe should include check_name, result, and pass_%
+    And the dataframe should be stored in the im_data_check table
+
+  Scenario Outline: Error Handling for Invalid Data
+    Given the drug_inventory_management table contains invalid data
+    When the data quality rule "<Rule Name>" is applied
+    Then an error message "<Error Message>" should be logged
+    And the error should be stored in the dq_check_table
+
+    Examples:
+      | Rule Name          | Error Message                  |
+      | Non-null ProductID | "ProductID cannot be null"     |
+      | Valid Expiry Date  | "Expiry Date is not valid"     |
+      | Non-negative Qty   | "Quantity cannot be negative"  |
+
+  Scenario: Scheduling Data Quality Checks
+    Given the data quality checks need to be scheduled
+    When the schedule is defined
+    Then the checks should run "<Frequency>"
+    And the results should be updated in the im_data_check table
+
+    Examples:
+      | Frequency  |
+      | Daily      |
+      | Weekly     |
+      | Monthly    |
+
