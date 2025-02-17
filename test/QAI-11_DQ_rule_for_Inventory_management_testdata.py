@@ -1,54 +1,61 @@
+# Import necessary libraries
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, when, count, lit, round
+from pyspark.sql.functions import col, when, count, lit, expr
+from pyspark.sql.types import StructType, StructField, StringType, TimestampType, LongType
 
 # Initialize Spark session
-spark = SparkSession.builder \
-    .appName("Data Quality Checks") \
-    .getOrCreate()
+spark = SparkSession.builder.appName("DataQualityChecks").getOrCreate()
+
+# Define schema for drug_inventory_management table
+schema = StructType([
+    StructField("product_ID", StringType(), True),
+    StructField("product_name", StringType(), True),
+    StructField("quantity", LongType(), True),
+    StructField("location", StringType(), True),
+    StructField("expiry_date", TimestampType(), True),
+    StructField("batch_number", StringType(), True),
+    StructField("supplier_ID", StringType(), True),
+    StructField("purchase_date", TimestampType(), True),
+    StructField("last_restocked_date", TimestampType(), True),
+    StructField("status", StringType(), True),
+    StructField("data_loaded_at", TimestampType(), True)
+])
 
 # Load the drug_inventory_management table
-drug_inventory_df = spark.table("agilisium_playground.purgo_playground.drug_inventory_management")
+drug_inventory_df = spark.read.format("delta").schema(schema).load("dbfs:/path/to/drug_inventory_management")
 
-# Define data quality rules based on DQ_rules_IM sheet
+# Define data quality rules
 dq_rules = [
-    {"check_name": "Check for Null Values", "column": "drug_id", "condition": "IS NOT NULL"},
-    {"check_name": "Check for Valid Quantity", "column": "quantity", "condition": "> 0"},
-    {"check_name": "Check for Valid Expiry Date", "column": "expiry_date", "condition": ">= current_date()"},
-    # Add more rules as per DQ_rules_IM sheet
+    {"check_name": "Non-null ProductID", "condition": "product_ID IS NOT NULL"},
+    {"check_name": "Valid Expiry Date", "condition": "expiry_date > current_timestamp()"},
+    {"check_name": "Non-negative Qty", "condition": "quantity >= 0"}
 ]
 
-# Function to apply data quality checks
-def apply_dq_checks(df, rules):
-    results = []
-    total_rows = df.count()
-    
-    for rule in rules:
-        check_name = rule["check_name"]
-        column = rule["column"]
-        condition = rule["condition"]
-        
-        # Apply the condition and calculate pass percentage
-        passed_rows = df.filter(f"{column} {condition}").count()
-        pass_percentage = (passed_rows / total_rows) * 100
-        
-        # Determine result
-        result = "Pass" if pass_percentage == 100 else "Fail"
-        
-        # Append result to the list
-        results.append((check_name, result, round(pass_percentage, 2)))
-    
-    # Create a DataFrame from the results
-    dq_results_df = spark.createDataFrame(results, ["check_name", "result", "pass_%"])
-    return dq_results_df
+# Initialize an empty list to store data quality results
+dq_results = []
 
-# Apply data quality checks
-dq_results_df = apply_dq_checks(drug_inventory_df, dq_rules)
+# Apply data quality rules
+for rule in dq_rules:
+    check_name = rule["check_name"]
+    condition = rule["condition"]
+    
+    # Calculate pass percentage
+    total_count = drug_inventory_df.count()
+    pass_count = drug_inventory_df.filter(expr(condition)).count()
+    pass_percentage = (pass_count / total_count) * 100 if total_count > 0 else 0
+    
+    # Determine result
+    result = "Pass" if pass_percentage == 100 else "Fail"
+    
+    # Append result to the list
+    dq_results.append((check_name, result, pass_percentage))
 
-# Show the results
-dq_results_df.show()
+# Create a DataFrame for data quality results
+dq_results_df = spark.createDataFrame(dq_results, ["check_name", "result", "pass_%"])
+
+# Write the data quality results to the im_data_check table
+dq_results_df.withColumn("dq_check_date", expr("current_timestamp()")) \
+    .write.format("delta").mode("overwrite").saveAsTable("purgo_playground.im_data_check")
 
 # Stop the Spark session
 spark.stop()
-
-
-This code initializes a Spark session, loads the `drug_inventory_management` table, and applies data quality checks based on predefined rules. The results are compiled into a DataFrame showing the check name, result, and pass percentage.
