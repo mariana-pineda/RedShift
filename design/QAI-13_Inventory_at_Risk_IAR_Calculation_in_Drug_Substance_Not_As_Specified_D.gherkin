@@ -1,0 +1,52 @@
+Feature: Calculate Inventory at Risk
+
+  Background:
+    Given the data is available in the purgo_playground.f_inv_movmnt table
+    And the data is available in the purgo_playground.d_product table
+
+  Scenario: Calculate Inventory at Risk when DNSA flag is active
+    Given the DNSA flag is 'Y'
+    When I sum the financial_qty from the f_inv_movmnt table where flag_active is 'Y'
+    Then I should get the total inventory at risk
+
+  Scenario: Calculate Percentage of Inventory at Risk
+    Given the total inventory is available
+    And the inventory at risk is calculated
+    When I calculate the percentage of inventory at risk using the formula
+      | Formula |
+      | (inventory at risk / total inventory) * 100 |
+    Then I should get the percentage of inventory at risk
+
+  Scenario Outline: Validate Inventory at Risk Calculation
+    Given the DNSA flag is <flag>
+    When I sum the financial_qty from the f_inv_movmnt table where flag_active is <flag>
+    Then the inventory at risk should be <expected_inventory_at_risk>
+
+    Examples:
+      | flag | expected_inventory_at_risk |
+      | 'Y'  | 1000                       |
+      | 'N'  | 0                          |
+
+  Scenario Outline: Validate Percentage of Inventory at Risk Calculation
+    Given the total inventory is <total_inventory>
+    And the inventory at risk is <inventory_at_risk>
+    When I calculate the percentage of inventory at risk using the formula
+      | Formula |
+      | (inventory at risk / total inventory) * 100 |
+    Then the percentage of inventory at risk should be <expected_percentage>
+
+    Examples:
+      | total_inventory | inventory_at_risk | expected_percentage |
+      | 10000           | 1000              | 10                  |
+      | 20000           | 0                 | 0                   |
+
+  Scenario: Error when DNSA flag is missing
+    Given the DNSA flag is missing
+    When I attempt to calculate the inventory at risk
+    Then I should receive an error message "DNSA flag is required"
+
+  Scenario: Error when total inventory is zero
+    Given the total inventory is zero
+    When I attempt to calculate the percentage of inventory at risk
+    Then I should receive an error message "Total inventory cannot be zero"
+
