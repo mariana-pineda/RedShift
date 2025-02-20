@@ -1,0 +1,97 @@
+Feature: Data Quality Checks for Tepezza Sales Data
+
+  Background:
+    Given the sales data is loaded from the purgo_playground.sales_data table
+    And the data quality rules are defined in the Sales_DQ_Rules.xlsx
+
+  Scenario Outline: Validate Mandatory Fields for Shipped Orders
+    Given the sales data record with Order_ID "<Order_ID>"
+    When the Shipment_Status is "Shipped"
+    Then the fields Order_ID, Product_Name, Customer_ID, Shipment_Date, and Quantity should not be NULL
+
+    Examples:
+      | Order_ID |
+      | 2001     |
+      | 2003     |
+      | 2004     |
+
+  Scenario Outline: Check Date Consistency
+    Given the sales data record with Order_ID "<Order_ID>"
+    When the Order_Date is "<Order_Date>" and Shipment_Date is "<Shipment_Date>" and Delivery_Scheduled is "<Delivery_Scheduled>"
+    Then the Order_Date should be earlier than Shipment_Date
+    And the Shipment_Date should be earlier than Delivery_Scheduled
+
+    Examples:
+      | Order_ID | Order_Date   | Shipment_Date | Delivery_Scheduled |
+      | 2001     | 2024-10-01   | 2024-10-03    | 2024-10-10         |
+      | 2003     | 2024-10-04   | 2024-10-05    | 2024-10-12         |
+      | 2004     | 2024-10-05   | 2024-10-06    | 2024-10-13         |
+
+  Scenario Outline: Validate Range for Demand and Quantity
+    Given the sales data record with Order_ID "<Order_ID>"
+    When the Demand is "<Demand>" and Quantity is "<Quantity>"
+    Then the Demand should be within the range of 10 to 50
+    And the Quantity should be within the range of 1 to 20
+
+    Examples:
+      | Order_ID | Demand | Quantity |
+      | 2001     | 20     | 10       |
+      | 2002     | 15     | 5        |
+      | 2003     | 30     | 10       |
+      | 2004     | 25     | 15       |
+      | 2005     | 10     | 5        |
+
+  Scenario Outline: Check Status Consistency
+    Given the sales data record with Order_ID "<Order_ID>"
+    When the Shipment_Status is "<Shipment_Status>"
+    Then if Shipment_Status is "Shipped", Shipment_Date, Delivery_Scheduled, and Line_Number should be populated
+    And if Shipment_Status is "On Hold", Shipment_Date, Delivery_Scheduled, and Line_Number can be NULL
+
+    Examples:
+      | Order_ID | Shipment_Status |
+      | 2001     | Shipped         |
+      | 2002     | On Hold         |
+      | 2003     | Shipped         |
+      | 2004     | Shipped         |
+      | 2005     | On Hold         |
+
+  Scenario: Ensure Unique Order_ID
+    Given the sales data
+    When checking for Order_ID uniqueness
+    Then each Order_ID should be unique
+
+  Scenario Outline: Validate Returned Product
+    Given the sales data record with Order_ID "<Order_ID>"
+    When Is_Returned is "Yes"
+    Then the Shipment_Date should exist
+    And a return process should be initiated
+
+    Examples:
+      | Order_ID |
+      | 2003     |
+
+  Scenario Outline: Validate Correct Unit Shipment Type
+    Given the sales data record with Order_ID "<Order_ID>"
+    When the Quantity is "<Quantity>"
+    Then the Unit_Shipment_Type should be consistent with the quantity ordered
+    And small quantities should not be shipped in a "Carton"
+
+    Examples:
+      | Order_ID | Quantity |
+      | 2001     | 10       |
+      | 2002     | 5        |
+      | 2004     | 15       |
+      | 2005     | 5        |
+
+  Scenario Outline: Validate Price Calculation Accuracy
+    Given the sales data record with Order_ID "<Order_ID>"
+    When the Quantity is "<Quantity>" and Total_Price is "<Total_Price>"
+    Then the Total_Price should match Quantity * Unit_Price
+
+    Examples:
+      | Order_ID | Quantity | Total_Price |
+      | 2001     | 10       | 500         |
+      | 2002     | 5        | 250         |
+      | 2003     | 10       | 600         |
+      | 2004     | 15       | 750         |
+      | 2005     | 5        | 300         |
