@@ -1,57 +1,64 @@
-Feature: Extract and Transform Product Details from JSON Strings in d_product_revenue Table
+Feature: Extract JSON fields from product_details in d_product_revenue table
 
   Background:
-    Given the d_product_revenue table exists in the {{purgo_playground}} namespace
-      And the table includes a product_details JSON string column
+    Given the Unity Catalog table {{purgo_playground.d_product_revenue}} has a product_details column with JSON strings
+    And the JSON data includes fields like batch_number, expiration_date, manufacturing_site, regulatory_approval, and price
 
-  Scenario: Extract individual fields from product_details JSON string
-    Given a row in the d_product_revenue table has product_details JSON as
-      | JSON_String                                                                              |
-      | {"batch_number": "BATCH2024-5678", "expiration_date": "2025-12-31", "manufacturing_site": "Site A", "regulatory_approval": "Approved", "price": 250.75} |
-    When the SQL query is executed to extract each field
-    Then the query should select
-      | batch_number       | expiration_date | manufacturing_site | regulatory_approval | price  |
-      | "BATCH2024-5678"   | "2025-12-31"    | "Site A"           | "Approved"          | 250.75 |
+  Scenario: Query successfully extracts JSON fields
+    Given the d_product_revenue table is accessible in Databricks
+    When the SQL query is executed to extract JSON fields
+    Then the output should include the following fields:
+      | batch_number     | expiration_date | manufacturing_site | regulatory_approval | price |
+    And each field should be correctly casted to its appropriate data type
 
-  Scenario Outline: Validate extraction of fields with various data inputs
-    Given a product_details JSON with <input_JSON>
-    When the SQL query is executed
-    Then each field should be extracted as follows
-      | batch_number | expiration_date | manufacturing_site | regulatory_approval | price |
-      | <batchNumber> | <expirationDate> | <manufacturingSite> | <regulatoryApproval> | <price> |
+  Scenario: Handle potential null values in JSON fields
+    Given the JSON fields in product_details may contain null or missing values
+    When executing the SQL query
+    Then the output should handle null values gracefully without errors
+    And default values should be specified where applicable
+
+  Scenario: Error in accessing JSON fields
+    Given incorrect field access in JSON strings
+    When executing the query with incorrect JSON path
+    Then an error message should be displayed
+    And the message should state "Invalid JSON field access in product_details"
+
+  Scenario Outline: Extract JSON fields with specific data types
+    Given the JSON field <field_name> in product_details
+    When the SQL query selects <field_name>
+    Then the output should ensure <field_name> is of type <data_type>
+    And any formatting requirements are met
 
     Examples:
-      | input_JSON                                                                                                      | batchNumber     | expirationDate | manufacturingSite | regulatoryApproval | price  |
-      | {"batch_number": "BATCH2024-5678", "expiration_date": "2025-12-31", "manufacturing_site": "Site A", "regulatory_approval": "Approved", "price": 250.75} | BATCH2024-5678  | 2025-12-31     | Site A            | Approved           | 250.75 |
-      | {"batch_number": "BATCH2025-1234", "expiration_date": "2026-06-15", "manufacturing_site": "Site B", "regulatory_approval": "Pending", "price": 199.99} | BATCH2025-1234  | 2026-06-15     | Site B            | Pending            | 199.99 |
+      | field_name         | data_type |
+      | batch_number       | STRING    |
+      | expiration_date    | DATE      |
+      | manufacturing_site | STRING    |
+      | regulatory_approval| STRING    |
+      | price              | DECIMAL   |
 
-  Scenario: Handle null or missing fields in product_details JSON
-    Given product_details JSON may have NULL fields
-    When a JSON field is missing from input_JSON
-    Then it should return NULL for that field in the query output
-
-  Scenario: Error handling when JSON string is malformed
-    Given a malformed JSON string in product_details column
+  Scenario: Optimize query for performance
+    Given the d_product_revenue table could contain a large number of records
     When the SQL query is executed
-    Then an error with message "Malformed JSON" should be returned
+    Then the query should be optimized for performance
+    And the execution speed should meet required SLAs
 
-  Scenario Outline: Extraction with expected data types and formats
-    Given product_details JSON includes data in specified formats
-    When the SQL query is executed
-    Then data should be cast to correct types:
-      | Field                | Expected Format | Data Type |
-      | batch_number         | String          | VARCHAR   |
-      | expiration_date      | Date            | DATE      |
-      | manufacturing_site   | String          | VARCHAR   |
-      | regulatory_approval  | String          | VARCHAR   |
-      | price                | Decimal         | DECIMAL   |
+  Scenario Outline: SQL Query to extract JSON fields
+    Given the SQL query executes without syntax errors
+    When the query is run in Databricks
+    Then it should correctly extract and cast the fields:
+      | field_name         | json_path                                         |
+      | batch_number       | "product_details:batch_number"                    |
+      | expiration_date    | "product_details:expiration_date"                 |
+      | manufacturing_site | "product_details:manufacturing_site"              |
+      | regulatory_approval| "product_details:regulatory_approval"             |
+      | price              | "product_details:price"                           |
 
-  # SQL Query for extracting fields (as per the given requirements):
-  #
-  # SELECT 
-  #   get_json_object(product_details, '$.batch_number') AS batch_number,
-  #   get_json_object(product_details, '$.expiration_date') AS expiration_date,
-  #   get_json_object(product_details, '$.manufacturing_site') AS manufacturing_site,
-  #   get_json_object(product_details, '$.regulatory_approval') AS regulatory_approval,
-  #   get_json_object(product_details, '$.price') AS price
-  # FROM {{purgo_playground.d_product_revenue}};
+    Examples:
+      | field_name         | json_path                                         |
+      | batch_number       | "product_details:batch_number"                    |
+      | expiration_date    | "product_details:expiration_date"                 |
+      | manufacturing_site | "product_details:manufacturing_site"              |
+      | regulatory_approval| "product_details:regulatory_approval"             |
+      | price              | "product_details:price"                           |
+
