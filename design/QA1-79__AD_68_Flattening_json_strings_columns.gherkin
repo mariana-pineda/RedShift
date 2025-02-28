@@ -1,63 +1,62 @@
-Feature: Extract Product Details from JSON in d_product_revenue Table
+Feature: Extract Fields from JSON String in d_product_revenue Table
 
   Background:
-    Given a connection to the Databricks SQL environment
-    And access to the database purgo_playground
-    And access to the table purgo_playground.d_product_revenue
+    Given the purgo_playground.d_product_revenue table exists
+    And the table contains a product_details column with JSON strings
 
-  Scenario: Extract Product Details Successfully
-    Given the purgo_playground.d_product_revenue table contains a product_details JSON string column
-    When I write a Databricks SQL query to extract fields from product_details
-    Then I should be able to select the following fields:
-      | field               |
-      | batch_number        |
-      | expiration_date     |
-      | manufacturing_site  |
-      | regulatory_approval |
-      | price               |
-    And the query should run without errors
-    And the extracted field types should match:
-      | field               | type    |
-      | batch_number        | STRING  |
-      | expiration_date     | STRING  |
-      | manufacturing_site  | STRING  |
-      | regulatory_approval | STRING  |
-      | price               | DOUBLE  |
+  Scenario: Extract each field from JSON string
+    Given a JSON object in the product_details column
+    When the data is queried
+    Then each JSON field should be selected as a separate column
+    And the extracted fields should match the sample JSON structure
 
-  Scenario Outline: Handle Missing or Null Fields During Extraction
-    Given the purgo_playground.d_product_revenue table contains a product_details JSON string column
-    And the JSON string might have missing or null "<field>"
-    When I write a Databricks SQL query to handle such scenarios
-    Then the query should extract "<field>" as NULL if not present or is null
-    And should produce no extraction errors
+  Scenario: Handling missing or null values
+    Given a JSON object in the product_details column with potential null values
+    When the data is queried
+    Then any missing or null field should be handled by returning 'NULL'
+
+  Scenario: Format validation of extracted fields
+    Given the fields extracted from the JSON string
+    When the fields are selected
+    Then batch_number should be a non-null string 
+    And expiration_date should be in 'YYYY-MM-DD' format
+    And manufacturing_site should be a string
+    And regulatory_approval should be a non-null string
+    And price should be a non-null numeric value
+
+  Scenario: Happy path with valid data
+    Given the product_details field with valid JSON data
+    | batch_number     | expiration_date | manufacturing_site | regulatory_approval | price |
+    | BATCH2024-5678   | 2025-12-31      | Site A             | Approved            | 250.75|
+    When the SQL query is executed
+    Then the resulting dataset should contain separate columns with respective values
+    And no errors should occur
+
+  Scenario Outline: Error scenario with invalid or malformed JSON
+    Given a malformed JSON object in the product_details column
+    | product_details                            |
+    | {"batch_numb": "BATCH2024-5678"}           |
+    | {"expiration_date": "wrong format"}        |
+    | {"regulatory_approval": null}              |
+    When the SQL query is executed
+    Then an error should occur
+    And an error message "<error_message>" should be returned
+
+  Examples:
+    | error_message                             |
+    | JSON parsing error                        |
+    | Invalid date format error                 |
+    | Null value error for regulatory_approval  |
+
+  Scenario Outline: Data-driven extraction tests
+    Given JSON objects with varied data in the product_details column
+    When executing the SQL query
+    Then each field should be extracted correctly
+    And match the expected results
 
     Examples:
-      | field               |
-      | batch_number        |
-      | expiration_date     |
-      | manufacturing_site  |
-      | regulatory_approval |
-      | price               |
-
-  Scenario: Handle Malformed JSON String
-    Given a malformed JSON string in the product_details column
-    When I attempt to parse and extract fields using a SQL query
-    Then an appropriate error message should be logged: "JSON_PARSE_ERROR"
-    And the query should halt extraction for that specific record
-
-  Scenario: Ensure Query Performance
-    Given a large volume of data in the purgo_playground.d_product_revenue table
-    When I execute the SQL query to extract JSON fields
-    Then the query should perform within acceptable time limits
-    And should not cause performance degradation
+    | batch_number     | expiration_date | manufacturing_site | regulatory_approval | price |
+    | BATCH2024-5678   | 2025-12-31      | Site B             | Approved            | 300.00|
+    | BATCH2023-1234   | 2024-05-15      | Site C             | Pending             | 150.45|
 
 
-
-**Note**: The following SQL is expected to be used in above steps:
-
-
-SELECT from_json(product_details, 'struct<batch_number:string, expiration_date:string, manufacturing_site:string, regulatory_approval:string, price:double>')
-FROM purgo_playground.d_product_revenue;
-
-
-This selects each field including handling nulls while ensuring correct data type extraction. Make sure to adapt the table name or field types if schema differs.
