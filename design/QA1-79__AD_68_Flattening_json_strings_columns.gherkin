@@ -1,76 +1,68 @@
-Feature: Extract product details from JSON in d_product_revenue table
-
-  In order to analyze product specifications and regulatory compliance,
-  As a data engineer,
-  I need to extract specific fields from the JSON string in the product_details column of d_product_revenue table.
+Feature: Extract product details from JSON column in purgo_playground.d_product_revenue table
 
   Background:
-    Given the purgo_playground.d_product_revenue table contains product_details as JSON strings
+    Given the purgo_playground.d_product_revenue table contains a column named product_details
+      And product_details is a JSON string with known schema
 
-  Scenario: Extract fields from JSON - Happy Path
-    Given a JSON string with the structure:
-      """
-      {
-        "batch_number": "BATCH2024-5678",
-        "expiration_date": "2025-12-31",
-        "manufacturing_site": "Site A",
-        "regulatory_approval": "Approved",
-        "price": 250.75
-      }
-      """
-    When a query is executed to extract fields from product_details
-    Then the extracted fields should include:
-      | batch_number               | expiration_date | manufacturing_site | regulatory_approval | price |
-      | "BATCH2024-5678"           | "2025-12-31"    | "Site A"           | "Approved"          | 250.75|
+  Scenario: Extract specific fields from product_details JSON
+    Given a product_details JSON string with fields "batch_number", "expiration_date", "manufacturing_site", "regulatory_approval", "price"
+    When the JSON string is parsed using Databricks SQL
+    Then each field should be correctly extracted and returned as individual columns
 
-    Examples:
-      | JSON structure                                                                                           |
-      | {"batch_number":"BATCH2024-5678","expiration_date":"2025-12-31","manufacturing_site":"Site A","regulatory_approval":"Approved","price":250.75} |
+  Scenario: Handle missing fields in product_details JSON
+    Given a product_details JSON string with missing fields
+    When the JSON string is parsed using Databricks SQL
+    Then the missing fields should default to NULL in the result set
 
-  Scenario: Extract fields with missing data - Error Handling Scenario
-    Given a JSON string with the structure:
-      """
-      {
-        "batch_number": "BATCH2024-5678",
-        "expiration_date": null,
-        "manufacturing_site": "Site A",
-        "regulatory_approval": "Approved",
-        "price": 250.75
-      }
-      """
-    When a query is executed to extract fields from product_details
-    Then an error message should display:
-      | Error Condition                  | Message                    |
-      | Missing expiration_date field    | "Expiration date missing"  |
-      | Null expiration_date field       | "Expiration date cannot be null" |
-
-  Scenario Outline: Data-driven extraction for multiple JSON strings
-    Given a JSON structure within product_details: <json_string>
-    When the SQL query is executed
-    Then the extracted fields should match:
-      | batch_number    | expiration_date | manufacturing_site | regulatory_approval | price |
-      | <batch_number>  | <expiration_date>| <manufacturing_site>| <regulatory_approval>| <price>|
+  Scenario Outline: Validate data types of extracted fields
+    Given a <JSONField> in product_details
+    When the field is parsed as <DataType>
+    Then the extraction should be successful without errors
 
     Examples:
-      | json_string                                                                                                                                             | batch_number     | expiration_date | manufacturing_site | regulatory_approval | price |
-      | {"batch_number":"BATCH2024-5678","expiration_date":"2025-12-31","manufacturing_site":"Site A","regulatory_approval":"Approved","price":250.75}        | "BATCH2024-5678" | "2025-12-31"   | "Site A"           | "Approved"          | 250.75|
-      | {"batch_number":"BATCH2024-5679","expiration_date":"2024-06-30","manufacturing_site":"Site B","regulatory_approval":"Pending","price":300.99}        | "BATCH2024-5679" | "2024-06-30"   | "Site B"           | "Pending"           | 300.99|
+      | JSONField          | DataType  |
+      | batch_number       | STRING    |
+      | expiration_date    | DATE      |
+      | manufacturing_site | STRING    |
+      | regulatory_approval| STRING    |
+      | price              | DECIMAL   |
 
-  Technical Details:
-    - Data Format: JSON string with keys batch_number, expiration_date, manufacturing_site, regulatory_approval, and price.
-    - Validation: Ensure non-null and valid format for each field, especially dates.
-    - Error Handling: Display appropriate error messages for missing or null fields.
-    - Query Pattern:
-      """sql
-      SELECT
-        get_json_object(product_details, '$.batch_number') AS batch_number,
-        get_json_object(product_details, '$.expiration_date') AS expiration_date,
-        get_json_object(product_details, '$.manufacturing_site') AS manufacturing_site,
-        get_json_object(product_details, '$.regulatory_approval') AS regulatory_approval,
-        get_json_object(product_details, '$.price') AS price
-      FROM
-        purgo_playground.d_product_revenue
-      WHERE
-        product_details IS NOT NULL
-      """
+  Scenario: Error handling for malformed JSON strings
+    Given a malformed product_details JSON string
+    When the JSON string is parsed using Databricks SQL
+    Then an error should be returned with message "Malformed JSON in product_details"
 
+  Scenario: Performance considerations under large data volume
+    Given a large number of rows in the purgo_playground.d_product_revenue table
+    When the query is executed to parse product_details JSON
+    Then the execution should complete within a reasonable time with efficient resource utilization
+
+
+**Technical Details:**
+- **Data Values and Formats:** 
+  - JSON Schema: `{ "batch_number": STRING, "expiration_date": DATE, "manufacturing_site": STRING, "regulatory_approval": STRING, "price": DECIMAL }`
+
+- **Databricks SQL Extraction Query:**
+  
+  SELECT 
+    product_details:batch_number::STRING AS batch_number,
+    product_details:expiration_date::DATE AS expiration_date,
+    product_details:manufacturing_site::STRING AS manufacturing_site,
+    product_details:regulatory_approval::STRING AS regulatory_approval,
+    product_details:price::DECIMAL(10, 2) AS price
+  FROM 
+    purgo_playground.d_product_revenue;
+  
+
+- **Error Conditions and Messages:** 
+  - Malformed JSON: Return error message "Malformed JSON in product_details".
+  - Missing fields: Default to NULL for fields not present.
+
+- **Validation Rules:**
+  - Proper data type conversion: Ensure JSON fields map correctly to expected SQL data types.
+  - Efficient querying for large datasets: Optimize for performance during large volume parsing.
+
+- **Acceptance Criteria:**
+  - Successfully parse and extract fields from JSON without errors.
+  - Handle missing or null fields gracefully.
+  - Implementation performance meets operational expectations.
