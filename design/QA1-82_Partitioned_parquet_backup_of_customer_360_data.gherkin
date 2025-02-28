@@ -1,0 +1,62 @@
+Feature: Data Backup and Maintenance of Customer 360 Table
+
+  As a data engineer, I want to store the customer_360_raw table data as a compressed parquet file,
+  partitioned by state, and perform vacuum operation to maintain data quality and storage efficiency.
+
+  Background:
+    Given the PySpark environment is set up with the necessary configurations
+    And the required permissions are granted to access and modify tables
+
+  Scenario Outline: Successfully backup customer_360_raw data and perform vacuum
+    Given the customer_360_raw table exists in agilisium_playground.purgo_playground
+    And the table schema has columns: <schema_columns>
+    And a timestamp column <timestamp_column> is used to filter data older than 30 days
+    When the PySpark script is executed to backup data
+    Then the data should be saved as compressed parquet files in /Volumes/agilisium_playground/purgo_playground/customer_360_raw_backup
+    And the parquet file should be partitioned by state
+    And the compression type used should be <compression_type>
+    When the vacuum operation is performed on the customer_360_raw table
+    Then only records from the last 30 days should remain
+    And the operation completes without errors
+
+    Examples:
+      | schema_columns                      | timestamp_column | compression_type |
+      | id, name, state, last_updated       | last_updated     | Snappy           |
+      | customer_id, state, update_ts       | update_ts        | GZIP             |
+
+  Scenario Outline: Handle missing conditions
+    Given the required environment and permissions are not available
+    When the script is executed
+    Then an error message "Environment or permissions not configured" should be displayed
+
+    Examples:
+      |                       |
+
+  Scenario Outline: Handle data older than 30 days
+    Given the customer_360_raw table contains records older than 30 days
+    When the vacuum operation is executed
+    Then only records with <timestamp> within the last 30 days should remain
+
+   Examples:
+      | timestamp  |
+      | 2023-08-01 |
+      | 2023-08-15 |
+
+  Scenario Outline: Handle storage capacity issues
+    Given the storage capacity of the volume is limited
+    When the script attempts to save large volumes of data
+    Then an error message "Insufficient storage space" should be displayed
+
+    Examples:
+      |                       |
+
+  Scenario Outline: Script execution frequency
+    Given the script needs to run periodically
+    When the script is scheduled to execute
+    Then the script should run every <frequency> without failing due to scheduling conflicts
+
+    Examples:
+      | frequency |
+      | daily     |
+      | weekly    |
+
