@@ -1,59 +1,65 @@
-Feature: Extract product details from JSON in d_product_revenue table
+Feature: Extract JSON Fields from d_product_revenue Table
+
+  As a data engineer
+  I want to select each field from the product_details JSON string column
+  So that I can use individual product attributes for further analysis and reporting
 
   Background:
-    Given the d_product_revenue table contains a column named product_details
-    And product_details contains JSON strings with specific product data
+    Given the d_product_revenue table exists in the purgo_playground database
+    And the product_details column contains JSON data
 
-  Scenario: Extract fields from JSON for a single product entry
-    Given a product JSON string with known structure in the product_details column
-    When I query the table to extract individual fields
-    Then I should get 'batch_number', 'expiration_date', 'manufacturing_site', 'regulatory_approval', and 'price' as separate columns
+  Scenario: Extract fields from product_details JSON
+    Given the product_details JSON string contains valid data
+    When I run the SQL query to extract fields
+    Then I should retrieve each field with the correct data type
 
-  Scenario Outline: Validate correct extraction with varied JSON values
-    Given a product JSON in the format:
-      """
-      {
-        "batch_number": "<batch_number>",
-        "expiration_date": "<expiration_date>",
-        "manufacturing_site": "<manufacturing_site>",
-        "regulatory_approval": "<regulatory_approval>",
-        "price": <price>
-      }
-      """
-    When the JSON field values are extracted
-    Then the extracted fields should match expected values
+  Scenario Outline: Handle potential missing or null values
+    Given the product_details JSON string may have missing fields
+    When I run the SQL query to extract fields and handle nulls
+    Then I should handle nulls gracefully with default values
+
     Examples:
-      | batch_number    | expiration_date | manufacturing_site | regulatory_approval | price  |
-      | BATCH2024-5678  | 2025-12-31      | Site A             | Approved            | 250.75 |
-      | BATCH2023-4321  | 2024-06-15      | Site B             | Pending             | 180.00 |
+      | batch_number        | expiration_date | manufacturing_site | regulatory_approval | price     |
+      | "BATCH2024-5678"    | "2025-12-31"    | "Site A"           | "Approved"          | 250.75    |
+      | "BATCH2025-6789"    | "2024-11-30"    | "Site B"           | "Pending"           | null      |
+      | null                | "2024-10-15"    | null               | "Approved"          | 150.00    |
 
-  Scenario: Handle unexpected JSON structure
-    Given a malformed JSON string in the product_details column
-    When I attempt to extract fields
-    Then an error message should indicate a JSON parsing issue
+  Scenario: Error scenario with invalid JSON format
+    Given the product_details JSON string is malformed
+    When I attempt to run the SQL query
+    Then an error message "Invalid JSON data format" should be displayed
 
-  Scenario: Handle missing fields in JSON
-    Given a JSON string missing some optional fields in the product_details column
-    When I extract fields
-    Then missing fields should be returned as NULL
-    And an appropriate warning should be logged
+  Scenario: Error scenario with unapproved regulatory status
+    Given the regulatory_approval field is "Unapproved"
+    When I run the SQL query
+    Then an error message "Product is not approved for reporting" should be displayed
 
-  Scenario: SQL Query for extracting JSON fields
-    Given the requirement to construct a SQL query
-    When I write the SQL query to extract each field
-    Then the query should be error-free
-    And it should successfully parse JSON into separate columns
+  Technical Details:
+    Given the column product_details contains JSON with the following schema:
+      | Field               | Type     | Description                          |
+      | batch_number        | STRING   | The batch number of the product      |
+      | expiration_date     | STRING   | Expiration date in YYYY-MM-DD format |
+      | manufacturing_site  | STRING   | Site where the product was made      |
+      | regulatory_approval | STRING   | Approval status                      |
+      | price               | DECIMAL  | Price of the product                 |
 
-  Scenario: Validate successful execution of SQL query
-    Given the SQL query:
-      """
-      SELECT
-        product_details:batch_number AS batch_number,
-        product_details:expiration_date AS expiration_date,
-        product_details:manufacturing_site AS manufacturing_site,
-        product_details:regulatory_approval AS regulatory_approval,
-        CAST(product_details:price AS double) AS price
-      FROM purgo_playground.d_product_revenue
-      """
-    When the query is executed in Databricks
-    Then it should return the fields with expected values and formats
+    Given the following validation rules:
+      | Field               | Validation                                                          |
+      | batch_number        | Must be a non-null string                                           |
+      | expiration_date     | Must be a valid date in YYYY-MM-DD format                           |
+      | regulatory_approval | Must be "Approved" or produce an error                              |
+      | price               | Must be a positive number or handle null with a default value of 0  |
+
+    SQL Query:
+    
+    SELECT 
+      get_json_object(product_details, '$.batch_number') AS batch_number,
+      TO_DATE(get_json_object(product_details, '$.expiration_date'), 'yyyy-MM-dd') AS expiration_date,
+      get_json_object(product_details, '$.manufacturing_site') AS manufacturing_site,
+      get_json_object(product_details, '$.regulatory_approval') AS regulatory_approval,
+      COALESCE(CAST(get_json_object(product_details, '$.price') AS DOUBLE), 0) AS price
+    FROM 
+      purgo_playground.d_product_revenue
+    WHERE
+      get_json_object(product_details, '$.regulatory_approval') = 'Approved'
+    
