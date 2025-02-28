@@ -1,68 +1,63 @@
-Feature: Extract product details from JSON column in purgo_playground.d_product_revenue table
+Feature: Extract Product Details from JSON in d_product_revenue Table
 
   Background:
-    Given the purgo_playground.d_product_revenue table contains a column named product_details
-      And product_details is a JSON string with known schema
+    Given a connection to the Databricks SQL environment
+    And access to the database purgo_playground
+    And access to the table purgo_playground.d_product_revenue
 
-  Scenario: Extract specific fields from product_details JSON
-    Given a product_details JSON string with fields "batch_number", "expiration_date", "manufacturing_site", "regulatory_approval", "price"
-    When the JSON string is parsed using Databricks SQL
-    Then each field should be correctly extracted and returned as individual columns
+  Scenario: Extract Product Details Successfully
+    Given the purgo_playground.d_product_revenue table contains a product_details JSON string column
+    When I write a Databricks SQL query to extract fields from product_details
+    Then I should be able to select the following fields:
+      | field               |
+      | batch_number        |
+      | expiration_date     |
+      | manufacturing_site  |
+      | regulatory_approval |
+      | price               |
+    And the query should run without errors
+    And the extracted field types should match:
+      | field               | type    |
+      | batch_number        | STRING  |
+      | expiration_date     | STRING  |
+      | manufacturing_site  | STRING  |
+      | regulatory_approval | STRING  |
+      | price               | DOUBLE  |
 
-  Scenario: Handle missing fields in product_details JSON
-    Given a product_details JSON string with missing fields
-    When the JSON string is parsed using Databricks SQL
-    Then the missing fields should default to NULL in the result set
-
-  Scenario Outline: Validate data types of extracted fields
-    Given a <JSONField> in product_details
-    When the field is parsed as <DataType>
-    Then the extraction should be successful without errors
+  Scenario Outline: Handle Missing or Null Fields During Extraction
+    Given the purgo_playground.d_product_revenue table contains a product_details JSON string column
+    And the JSON string might have missing or null "<field>"
+    When I write a Databricks SQL query to handle such scenarios
+    Then the query should extract "<field>" as NULL if not present or is null
+    And should produce no extraction errors
 
     Examples:
-      | JSONField          | DataType  |
-      | batch_number       | STRING    |
-      | expiration_date    | DATE      |
-      | manufacturing_site | STRING    |
-      | regulatory_approval| STRING    |
-      | price              | DECIMAL   |
+      | field               |
+      | batch_number        |
+      | expiration_date     |
+      | manufacturing_site  |
+      | regulatory_approval |
+      | price               |
 
-  Scenario: Error handling for malformed JSON strings
-    Given a malformed product_details JSON string
-    When the JSON string is parsed using Databricks SQL
-    Then an error should be returned with message "Malformed JSON in product_details"
+  Scenario: Handle Malformed JSON String
+    Given a malformed JSON string in the product_details column
+    When I attempt to parse and extract fields using a SQL query
+    Then an appropriate error message should be logged: "JSON_PARSE_ERROR"
+    And the query should halt extraction for that specific record
 
-  Scenario: Performance considerations under large data volume
-    Given a large number of rows in the purgo_playground.d_product_revenue table
-    When the query is executed to parse product_details JSON
-    Then the execution should complete within a reasonable time with efficient resource utilization
+  Scenario: Ensure Query Performance
+    Given a large volume of data in the purgo_playground.d_product_revenue table
+    When I execute the SQL query to extract JSON fields
+    Then the query should perform within acceptable time limits
+    And should not cause performance degradation
 
 
-**Technical Details:**
-- **Data Values and Formats:** 
-  - JSON Schema: `{ "batch_number": STRING, "expiration_date": DATE, "manufacturing_site": STRING, "regulatory_approval": STRING, "price": DECIMAL }`
 
-- **Databricks SQL Extraction Query:**
-  
-  SELECT 
-    product_details:batch_number::STRING AS batch_number,
-    product_details:expiration_date::DATE AS expiration_date,
-    product_details:manufacturing_site::STRING AS manufacturing_site,
-    product_details:regulatory_approval::STRING AS regulatory_approval,
-    product_details:price::DECIMAL(10, 2) AS price
-  FROM 
-    purgo_playground.d_product_revenue;
-  
+**Note**: The following SQL is expected to be used in above steps:
 
-- **Error Conditions and Messages:** 
-  - Malformed JSON: Return error message "Malformed JSON in product_details".
-  - Missing fields: Default to NULL for fields not present.
 
-- **Validation Rules:**
-  - Proper data type conversion: Ensure JSON fields map correctly to expected SQL data types.
-  - Efficient querying for large datasets: Optimize for performance during large volume parsing.
+SELECT from_json(product_details, 'struct<batch_number:string, expiration_date:string, manufacturing_site:string, regulatory_approval:string, price:double>')
+FROM purgo_playground.d_product_revenue;
 
-- **Acceptance Criteria:**
-  - Successfully parse and extract fields from JSON without errors.
-  - Handle missing or null fields gracefully.
-  - Implementation performance meets operational expectations.
+
+This selects each field including handling nulls while ensuring correct data type extraction. Make sure to adapt the table name or field types if schema differs.
