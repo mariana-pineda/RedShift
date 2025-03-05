@@ -1,0 +1,48 @@
+Feature: Claim Rejection Analysis
+
+  Background:
+    Given the data is read from the purgo_playground.claims_data table
+
+  Scenario Outline: Claim Validation Checks
+    Given the claim with <Claim_ID>, <Claim_Amount>, <Disease_Code>, <Service_Date>, <Policy_End_Date>, and <Claim_Filing_Date>
+    When the validation is executed
+    Then the result should be saved in purgo_playground.service_request table
+    And the result should show Reason as "<Reason>" and Validation_Status as "<Validation_Status>"
+
+  Examples:
+    | Claim_ID | Claim_Amount | Disease_Code | Service_Date | Policy_End_Date | Claim_Filing_Date | Reason                                        | Validation_Status |
+    | C001     | 1500         | D004         | 2023-07-01   | 2023-06-30      | 2023-09-15        | Exceeds Maximum Claim Amount                  | Rejected          |
+    | C002     | 900          | D005         | 2023-08-01   | 2023-07-31      | 2023-09-29        | Not Applicable Disease                        | Rejected          |
+    | C003     | 800          | D001         | 2023-06-01   | 2023-05-31      | 2023-06-15        | Beyond Policy Validity Period                 | Rejected          |
+    | C004     | 500          | D002         | 2023-07-01   | 2023-09-01      | 2023-12-10        | Filed After 90 Days of Service Date           | Rejected          |
+    | C005     | 950          | D003         | 2023-07-01   | 2023-08-01      | 2023-07-15        | Claim Accepted                                | Accepted          |
+
+  Scenario: Happy Path - Claim Accepted
+    Given a claim with Claim_Amount 950, Disease_Code D003, Service_Date 2023-07-01, Policy_End_Date 2023-08-01, and Claim_Filing_Date 2023-07-15
+    When the validation is executed
+    Then the claim is accepted 
+    And the output displays Reason as "Claim Accepted" and Validation_Status as "Accepted"
+
+  Scenario: Error Path - Claim Amount Exceeds Limit
+    Given a claim with Claim_Amount 1500, Disease_Code D002, Service_Date 2023-07-01, Policy_End_Date 2023-09-01, and Claim_Filing_Date 2023-07-30
+    When the validation is executed
+    Then the claim is rejected 
+    And the output displays Reason as "Exceeds Maximum Claim Amount" and Validation_Status as "Rejected"
+
+  Scenario: Error Path - Invalid Disease Code
+    Given a claim with Claim_Amount 900, Disease_Code D004, Service_Date 2023-07-01, Policy_End_Date 2023-09-01, and Claim_Filing_Date 2023-07-30
+    When the validation is executed
+    Then the claim is rejected
+    And the output displays Reason as "Not Applicable Disease" and Validation_Status as "Rejected"
+
+  Scenario: Error Path - Service Date Beyond Policy Validity
+    Given a claim with Claim_Amount 900, Disease_Code D002, Service_Date 2023-07-01, Policy_End_Date 2023-06-30, and Claim_Filing_Date 2023-07-01
+    When the validation is executed
+    Then the claim is rejected
+    And the output displays Reason as "Beyond Policy Validity Period" and Validation_Status as "Rejected"
+
+  Scenario: Error Path - Late Filing
+    Given a claim with Claim_Amount 900, Disease_Code D002, Service_Date 2023-07-01, Policy_End_Date 2023-09-01, and Claim_Filing_Date 2023-11-15
+    When the validation is executed
+    Then the claim is rejected
+    And the output displays Reason as "Filed After 90 Days of Service Date" and Validation_Status as "Rejected"
