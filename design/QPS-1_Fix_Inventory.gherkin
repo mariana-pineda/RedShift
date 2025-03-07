@@ -1,0 +1,77 @@
+Feature: Modify Database Schema
+
+  Background:
+    Given the Unity Catalog Schema is set to information_schema
+
+  Scenario: Add lastdate to employees table
+    Given the database schema is up to date
+    When I add a "lastdate" column to the "employees" table
+    Then the "lastdate" column should be of type DATE
+    And the default value of "lastdate" should be set to the current date ('YYYY-MM-DD' format)
+    And all existing employee records should have "lastdate" initialized to the default date
+   
+  Scenario Outline: Validate lastdate column for incorrect data
+    Given the "lastdate" column is added to the "employees" table
+    When I try to insert "<invalid_date>" to "lastdate" field for an employee
+    Then an error should occur with message "Invalid date format for lastdate"
+
+    Examples:
+      | invalid_date  |
+      | '2023-02-30'  |
+      | 'abcd-ef-gh'  |
+      | ''            |
+
+  Scenario Outline: Validate lastdate column for future dates
+    Given the "lastdate" column is added to the "employees" table
+    When I try to set "lastdate" to "<future_date>" for an employee
+    Then an error should occur with message "lastdate cannot be set to a future date"
+
+    Examples:
+      | future_date   |
+      | '2099-12-31'  |
+      | '3000-01-01'  |
+
+  Scenario: Add categoryGroup to customers table
+    Given the database schema is up to date
+    When I add a "categoryGroup" column to the "customers" table
+    Then the "categoryGroup" column should be of type STRING
+    And predefined categories should include "VIP", "Regular", "New"
+    And a validation should ensure it only contains valid categories
+    And all existing customer records should have "Uncategorized" as the default value
+
+  Scenario Outline: Validate categoryGroup column for invalid categories
+    Given the "categoryGroup" column is added to the "customers" table
+    When I set "categoryGroup" to "<invalid_category>" for a customer
+    Then an error should occur with message "Invalid category: <invalid_category>"
+
+    Examples:
+      | invalid_category |
+      | 'Super VIP'     |
+      | 'Gold'          |
+      | ''              |
+
+  Scenario Outline: Validate default value for categoryGroup
+    Given the "categoryGroup" column is added to the "customers" table
+    When I fetch an existing customer record
+    Then the "categoryGroup" should default to "Uncategorized"
+
+  Scenario: Deployment plan
+    Given a requirement to deploy schema changes
+    When consulting with database administrators
+    Then the deployment plan should ensure minimal disruption and data consistency
+
+  Scenario: Predefined category list source
+    Given a requirement for category information
+    When consulting with business analysts/product owners
+    Then identify the origin and maintenance responsibility for predefined categories
+
+  Scenario: Impact on dependent systems
+    Given schema changes are planned
+    When consulting with database administrators
+    Then ensure no dependent systems are adversely affected
+
+  Scenario: Testing and validation strategy
+    Given schema changes are to be validated
+    When consulting with quality assurance team
+    Then a robust testing strategy should be proposed to ensure correct data and no impact on existing functionalities
+   
