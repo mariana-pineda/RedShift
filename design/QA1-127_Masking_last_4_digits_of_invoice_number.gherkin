@@ -1,37 +1,37 @@
-Feature: Mask Invoice Numbers in d_product_revenue_clone
-
-  Background:
-    Given a Unity Catalog table "purgo_playground.d_product_revenue" exists
-    And a Unity Catalog table "purgo_playground.d_product_revenue_clone" does not exist
-    When I create a clone of "purgo_playground.d_product_revenue" named "purgo_playground.d_product_revenue_clone"
+Feature: Mask Invoice Numbers
 
   Scenario Outline: Mask last 4 digits of invoice_number
-    Given the "purgo_playground.d_product_revenue_clone" table contains data with invoice_number "<invoice_number>"
-    When I execute the PySpark masking logic
-    Then the invoice_number in "purgo_playground.d_product_revenue_clone" should be "<masked_invoice_number>"
 
+    Given a source table "purgo_playground.d_product_revenue"
+    And a clone table "purgo_playground.d_product_revenue_clone"
+    When the clone table is created from the source table
+    And the last 4 digits of "invoice_number" are masked with "*"
+    Then the clone table "invoice_number" should be a string type
+    And the original table remains unchanged
+    And the masked "invoice_number" should match the expected format
     Examples:
-      | invoice_number | masked_invoice_number |
-      | 1234567890    | 123456****           |
-      | 9876543210    | 987654****           |
-      | 123           | 123                 | # No masking if less than 4 digits
-      | null          | null                 | # Handle null values
+      | invoice_number | expected_masked_invoice_number |
+      | 1234567890    | 123456****                  |
+      | 1234567       | 123****                      |
+      | 123           | 123                         | # Handles less than 4 digits
 
 
-  Scenario: Handle empty table
-    Given the "purgo_playground.d_product_revenue_clone" table is empty
-    When I execute the PySpark masking logic
-    Then the "purgo_playground.d_product_revenue_clone" table should remain empty
+  Scenario: Handle null invoice_number
+
+    Given a source table "purgo_playground.d_product_revenue" with a null "invoice_number"
+    And a clone table "purgo_playground.d_product_revenue_clone"
+    When the clone table is created from the source table
+    And the last 4 digits of "invoice_number" are masked with "*"
+    Then the clone table "invoice_number" should be null where the source is null
 
 
-  Scenario: Invoice number data type validation
-    Given the "purgo_playground.d_product_revenue_clone" table contains data where invoice_number is of type bigint
-    When I execute the PySpark masking logic
-    Then the invoice_number in "purgo_playground.d_product_revenue_clone" should be of type string
+  Scenario: Clone table already exists
 
+    Given a source table "purgo_playground.d_product_revenue"
+    And a pre-existing clone table "purgo_playground.d_product_revenue_clone"
+    When the clone table is created from the source table
+    And the last 4 digits of "invoice_number" are masked with "*"
+    Then the pre-existing clone table is overwritten
+    And the masked "invoice_number" should match the expected format in the new clone table
 
-  Scenario: Large Data Volume
-    Given the "purgo_playground.d_product_revenue_clone" table contains a large volume of data (e.g., 1 million rows)
-    When I execute the PySpark masking logic within a reasonable timeframe (e.g. less than 5 minutes)
-    Then the masking should be completed successfully without performance issues
 
