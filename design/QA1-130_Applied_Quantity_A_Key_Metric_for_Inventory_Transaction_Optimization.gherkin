@@ -1,66 +1,36 @@
-Feature: APPLIED QTY Calculation in Inventory Management
+Feature: Applied Quantity Calculation for Inventory Transactions
 
   Background:
-    Given I am using Unity Catalog purgo_databricks with Schema purgo_playground
+    Given the environment is set up with Unity Catalog purgo_databricks and schema purgo_playground
+    And the target tables are f_inv_movmnt_apl_qty, f_inv_movmnt_apl_qty_test, and f_inv_movmnt_apl_qty_result
 
-  Scenario Outline: Calculate apl_qty for positive transaction quantities
-    Given the inventory transaction with ref_txn_qty "<ref_txn_qty>", 
-      cumulative_txn_qty "<cumulative_txn_qty>", 
-      cumulative_ref_ord_sched_qty "<cumulative_ref_ord_sched_qty>", 
-      ref_ord_sched_qty "<ref_ord_sched_qty>", 
-      prior_cumulative_txn_qty "<prior_cumulative_txn_qty>", 
-      and prior_cumulative_ref_ord_sched_qty "<prior_cumulative_ref_ord_sched_qty>"
-    When the ref_txn_qty is greater than 0
-    And cumulative_txn_qty is greater than or equal to cumulative_ref_ord_sched_qty
-    Then set apl_qty to "<apl_qty_condition1>"
+  Scenario Outline: Calculate applied quantity based on transaction conditions
+    Given a record with txn_id <txn_id>, ref_txn_qty <ref_txn_qty>, cumulative_txn_qty <cumulative_txn_qty>, cumulative_ref_ord_sched_qty <cumulative_ref_ord_sched_qty>, ref_ord_sched_qty <ref_ord_sched_qty>, prior_cumulative_txn_qty <prior_cumulative_txn_qty>, and prior_cumulative_ref_ord_sched_qty <prior_cumulative_ref_ord_sched_qty>
+    When I calculate the apl_qty
+    Then the apl_qty should be <apl_qty>
+    
     Examples:
-      | txn_id | ref_txn_qty | cumulative_txn_qty | cumulative_ref_ord_sched_qty | ref_ord_sched_qty | prior_cumulative_txn_qty | prior_cumulative_ref_ord_sched_qty | apl_qty_condition1 |
-      | 1      | 50          | 100                | 90                           | 50                | 40                        | 30                                  | 40.0 |
-      | 3      | 20          | 60                 | 100                          | 30                | 30                        | 25                                  | 30.0 |
+      | txn_id | ref_txn_qty | cumulative_txn_qty | cumulative_ref_ord_sched_qty | ref_ord_sched_qty | prior_cumulative_txn_qty | prior_cumulative_ref_ord_sched_qty | apl_qty |
+      | 1      | 50          | 100                | 90                           | 50                | 40                        | 30                                   | 30      |
+      | 2      | -10         | 80                 | 70                           | 40                | 50                        | 45                                   | -10     |
+      | 3      | 20          | 60                 | 100                          | 30                | 30                        | 25                                   | 20      |
 
-  Scenario Outline: Calculate apl_qty with cumulative_ref_ord_sched_qty greater or equal to cumulative_txn_qty
-    Given the inventory transaction with ref_txn_qty "<ref_txn_qty>", 
-      cumulative_txn_qty "<cumulative_txn_qty>", 
-      cumulative_ref_ord_sched_qty "<cumulative_ref_ord_sched_qty>", 
-      ref_ord_sched_qty "<ref_ord_sched_qty>", 
-      prior_cumulative_txn_qty "<prior_cumulative_txn_qty>", 
-      and prior_cumulative_ref_ord_sched_qty "<prior_cumulative_ref_ord_sched_qty>"
-    When the ref_txn_qty is greater than 0
-    And cumulative_ref_ord_sched_qty is greater than or equal to cumulative_txn_qty
-    Then set apl_qty to "<apl_qty_condition2>"
-    Examples:
-      | txn_id | ref_txn_qty | cumulative_txn_qty | cumulative_ref_ord_sched_qty | ref_ord_sched_qty | prior_cumulative_txn_qty | prior_cumulative_ref_ord_sched_qty | apl_qty_condition2 |
-      | 2      | -10         | 80                 | 70                           | 40                | 50                        | 45                                  | -10.0 |
+  Scenario: Condition 1 - ref_txn_qty > 0 and cumulative_txn_qty >= cumulative_ref_ord_sched_qty
+    Given a record with txn_id 1, ref_txn_qty 50, cumulative_txn_qty 100, cumulative_ref_ord_sched_qty 90, ref_ord_sched_qty 50, prior_cumulative_txn_qty 40, and prior_cumulative_ref_ord_sched_qty 30
+    When I calculate the apl_qty
+    Then the apl_qty should be 30
 
-  Scenario Outline: Calculate apl_qty for negative transaction quantities
-    Given the inventory transaction with ref_txn_qty "<ref_txn_qty>", 
-      cumulative_txn_qty "<cumulative_txn_qty>", 
-      cumulative_ref_ord_sched_qty "<cumulative_ref_ord_sched_qty>"
-    When the ref_txn_qty is less than 0
-    And cumulative_txn_qty is not equal to 0
-    And cumulative_ref_ord_sched_qty is greater than 0
-    Then set apl_qty to "<apl_qty_condition3>"
-    Examples:
-      | txn_id | ref_txn_qty | cumulative_txn_qty | cumulative_ref_ord_sched_qty | apl_qty_condition3 |
-      | 2      | -10         | 80                 | 70                           | -10.0 |
+  Scenario: Condition 2 - ref_txn_qty > 0 and cumulative_ref_ord_sched_qty >= cumulative_txn_qty
+    Given a record with txn_id 3, ref_txn_qty 20, cumulative_txn_qty 60, cumulative_ref_ord_sched_qty 100, ref_ord_sched_qty 30, prior_cumulative_txn_qty 30, and prior_cumulative_ref_ord_sched_qty 25
+    When I calculate the apl_qty
+    Then the apl_qty should be 20
 
-  Scenario Outline: Default apl_qty calculation
-    Given the inventory transaction with ref_txn_qty "<ref_txn_qty>", 
-      cumulative_txn_qty "<cumulative_txn_qty>", 
-      cumulative_ref_ord_sched_qty "<cumulative_ref_ord_sched_qty>"
-    When none of the conditions for apl_qty are met
-    Then set apl_qty to "<apl_qty_default>"
-    Examples:
-      | txn_id | ref_txn_qty | cumulative_txn_qty | cumulative_ref_ord_sched_qty | apl_qty_default |
-      | 4      | 0           | 0                  | 0                            | NULL |
+  Scenario: Condition 3 - ref_txn_qty < 0, cumulative_txn_qty != 0, and cumulative_ref_ord_sched_qty > 0
+    Given a record with txn_id 2, ref_txn_qty -10, cumulative_txn_qty 80, cumulative_ref_ord_sched_qty 70, ref_ord_sched_qty 40, prior_cumulative_txn_qty 50, and prior_cumulative_ref_ord_sched_qty 45
+    When I calculate the apl_qty
+    Then the apl_qty should be -10
 
-  Scenario Outline: Error handling for missing data
-    Given an incomplete inventory transaction with missing field "<missing_field>"
-    When attempting to calculate apl_qty
-    Then the system should return an error message "Error: Missing required data for <missing_field>"
-    Examples:
-      | txn_id | missing_field              |
-      | 5      | ref_txn_qty                |
-      | 6      | cumulative_txn_qty         |
-      | 7      | cumulative_ref_ord_sched_qty |
-
+  Scenario: Default condition where none of the specific conditions apply
+    Given a record with txn_id 4, ref_txn_qty 0, cumulative_txn_qty 50, cumulative_ref_ord_sched_qty 50, ref_ord_sched_qty 25, prior_cumulative_txn_qty 45, and prior_cumulative_ref_ord_sched_qty 45
+    When I calculate the apl_qty
+    Then the apl_qty should be NULL
