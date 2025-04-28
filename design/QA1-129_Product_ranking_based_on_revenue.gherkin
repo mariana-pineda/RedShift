@@ -1,30 +1,70 @@
-Feature: Rank product_type by revenue for each country and evaluate performance over 12 months
-    
+Feature: Rank Product Types by Revenue and Evaluate Performance
+
   Background:
-    Given a Unity Catalog connection to purgo_playground schema
+    Given the data is sourced from "purgo_playground.d_product_revenue" table
+    And the product type placeholder is mapped to "product_type"
+    And the purchased date is sourced from "purchased_date" column
+    And the performance column will be added with a string data type
 
-  Scenario: Rank product_type by revenue for each country
-    Given I have a dataset with columns product_id, product_name, product_type, revenue, country, purchased_date
-    When I filter data for distinct product_type and country
-    And I aggregate the sum of revenue over 12 months based on purchased_date
-    Then I should obtain a ranked list of product_type by revenue within each country
+  Scenario Outline: Rank Products by Revenue for Each Country
+    Given the data is filtered for the last 12 months from <current_month>
+    When products are ranked by revenue
+    Then generate a new ranking for each product type within each country
+    And tie conditions are handled by assigning the same rank
+    And the new performance column is added to evaluate consistency
 
-  Scenario Outline: Evaluate product_type performance over 12 months
-    Given I have the monthly revenue rankings for product_type
-    When I calculate the number of months each product_type is ranked in the top 3 
-    Then I add a new column performance with value "<expected_performance>"
-    Examples:
-      | product_type   | months_top3 | expected_performance |
-      | product_A      | 6           | Gold                 |
-      | product_B      | 4           | Silver               |
-      | product_C      | 2           | Bronze               |
+  Examples:
+    | current_month |
+    | January       |
+    | February      |
+    | March         |
+    | April         |
+    | May           |
+    | June          |
+    | July          |
+    | August        |
+    | September     |
+    | October       |
+    | November      |
+    | December      |
 
-  Scenario: Error when purchased_date is out of range
-    Given purchased_date is not within the last 12 months
-    When I attempt to rank product_type by revenue
-    Then I receive an error message "Purchased date out of range"
+  Scenario: Evaluate Product Performance for Consistency
+    Given each product type has been ranked by revenue across multiple months
+    When evaluating the consistency of product ranking
+    Then assign "Gold" for top 3 placement in 6 or more months
+    And assign "Silver" for top 3 placement between 3 and 5 months
+    And assign "Bronze" for top 3 placement less than 3 months
 
-  Scenario: Error message for invalid product_type
-    Given a product_type value that is not recognized
-    When I fetch the ranking data
-    Then I receive an error message "Invalid product_type provided"
+  Scenario Outline: Handle Error When Compulsory Data is Missing
+    Given the data is missing <column>
+    When attempting to execute the ranking process
+    Then an error message is returned stating "Missing compulsory data: <column>"
+
+  Examples:
+    | column          |
+    | product_type    |
+    | purchased_date  |
+    | revenue         |
+    | country         |
+
+  Scenario Outline: Handle Error for Invalid Data Format
+    Given the data format is invalid for <column>
+    When attempting to process data
+    Then an error message is returned stating "Invalid data format for: <column>"
+
+  Examples:
+    | column          |
+    | purchased_date  |
+    | revenue         |
+
+  Scenario Outline: Generate Performance Evaluation Summary
+    Given the ranking and performance evaluation process is complete
+    When generating the performance evaluation summary
+    Then ensure each product type has a performance label
+    And summary includes count of Gold, Silver, and Bronze categories
+
+  Examples:
+    | performance_label |
+    | Gold              |
+    | Silver            |
+    | Bronze            |
