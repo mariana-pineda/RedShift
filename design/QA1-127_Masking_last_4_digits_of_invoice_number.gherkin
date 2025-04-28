@@ -1,0 +1,37 @@
+Feature: Mask Invoice Numbers in d_product_revenue_clone
+
+  Background:
+    Given a Unity Catalog table "purgo_playground.d_product_revenue" exists
+    And a Unity Catalog table "purgo_playground.d_product_revenue_clone" does not exist
+    When I create a clone of "purgo_playground.d_product_revenue" named "purgo_playground.d_product_revenue_clone"
+
+  Scenario Outline: Mask last 4 digits of invoice_number
+    Given the "purgo_playground.d_product_revenue_clone" table contains data with invoice_number "<invoice_number>"
+    When I execute the PySpark masking logic
+    Then the invoice_number in "purgo_playground.d_product_revenue_clone" should be "<masked_invoice_number>"
+
+    Examples:
+      | invoice_number | masked_invoice_number |
+      | 1234567890    | 123456****           |
+      | 9876543210    | 987654****           |
+      | 123           | 123                 | # No masking if less than 4 digits
+      | null          | null                 | # Handle null values
+
+
+  Scenario: Handle empty table
+    Given the "purgo_playground.d_product_revenue_clone" table is empty
+    When I execute the PySpark masking logic
+    Then the "purgo_playground.d_product_revenue_clone" table should remain empty
+
+
+  Scenario: Invoice number data type validation
+    Given the "purgo_playground.d_product_revenue_clone" table contains data where invoice_number is of type bigint
+    When I execute the PySpark masking logic
+    Then the invoice_number in "purgo_playground.d_product_revenue_clone" should be of type string
+
+
+  Scenario: Large Data Volume
+    Given the "purgo_playground.d_product_revenue_clone" table contains a large volume of data (e.g., 1 million rows)
+    When I execute the PySpark masking logic within a reasonable timeframe (e.g. less than 5 minutes)
+    Then the masking should be completed successfully without performance issues
+
