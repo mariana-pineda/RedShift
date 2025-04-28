@@ -1,0 +1,30 @@
+Feature: Rank product_type by revenue for each country and evaluate performance over 12 months
+    
+  Background:
+    Given a Unity Catalog connection to purgo_playground schema
+
+  Scenario: Rank product_type by revenue for each country
+    Given I have a dataset with columns product_id, product_name, product_type, revenue, country, purchased_date
+    When I filter data for distinct product_type and country
+    And I aggregate the sum of revenue over 12 months based on purchased_date
+    Then I should obtain a ranked list of product_type by revenue within each country
+
+  Scenario Outline: Evaluate product_type performance over 12 months
+    Given I have the monthly revenue rankings for product_type
+    When I calculate the number of months each product_type is ranked in the top 3 
+    Then I add a new column performance with value "<expected_performance>"
+    Examples:
+      | product_type   | months_top3 | expected_performance |
+      | product_A      | 6           | Gold                 |
+      | product_B      | 4           | Silver               |
+      | product_C      | 2           | Bronze               |
+
+  Scenario: Error when purchased_date is out of range
+    Given purchased_date is not within the last 12 months
+    When I attempt to rank product_type by revenue
+    Then I receive an error message "Purchased date out of range"
+
+  Scenario: Error message for invalid product_type
+    Given a product_type value that is not recognized
+    When I fetch the ranking data
+    Then I receive an error message "Invalid product_type provided"
