@@ -1,0 +1,66 @@
+Feature: APPLIED QTY Calculation in Inventory Management
+
+  Background:
+    Given I am using Unity Catalog purgo_databricks with Schema purgo_playground
+
+  Scenario Outline: Calculate apl_qty for positive transaction quantities
+    Given the inventory transaction with ref_txn_qty "<ref_txn_qty>", 
+      cumulative_txn_qty "<cumulative_txn_qty>", 
+      cumulative_ref_ord_sched_qty "<cumulative_ref_ord_sched_qty>", 
+      ref_ord_sched_qty "<ref_ord_sched_qty>", 
+      prior_cumulative_txn_qty "<prior_cumulative_txn_qty>", 
+      and prior_cumulative_ref_ord_sched_qty "<prior_cumulative_ref_ord_sched_qty>"
+    When the ref_txn_qty is greater than 0
+    And cumulative_txn_qty is greater than or equal to cumulative_ref_ord_sched_qty
+    Then set apl_qty to "<apl_qty_condition1>"
+    Examples:
+      | txn_id | ref_txn_qty | cumulative_txn_qty | cumulative_ref_ord_sched_qty | ref_ord_sched_qty | prior_cumulative_txn_qty | prior_cumulative_ref_ord_sched_qty | apl_qty_condition1 |
+      | 1      | 50          | 100                | 90                           | 50                | 40                        | 30                                  | 40.0 |
+      | 3      | 20          | 60                 | 100                          | 30                | 30                        | 25                                  | 30.0 |
+
+  Scenario Outline: Calculate apl_qty with cumulative_ref_ord_sched_qty greater or equal to cumulative_txn_qty
+    Given the inventory transaction with ref_txn_qty "<ref_txn_qty>", 
+      cumulative_txn_qty "<cumulative_txn_qty>", 
+      cumulative_ref_ord_sched_qty "<cumulative_ref_ord_sched_qty>", 
+      ref_ord_sched_qty "<ref_ord_sched_qty>", 
+      prior_cumulative_txn_qty "<prior_cumulative_txn_qty>", 
+      and prior_cumulative_ref_ord_sched_qty "<prior_cumulative_ref_ord_sched_qty>"
+    When the ref_txn_qty is greater than 0
+    And cumulative_ref_ord_sched_qty is greater than or equal to cumulative_txn_qty
+    Then set apl_qty to "<apl_qty_condition2>"
+    Examples:
+      | txn_id | ref_txn_qty | cumulative_txn_qty | cumulative_ref_ord_sched_qty | ref_ord_sched_qty | prior_cumulative_txn_qty | prior_cumulative_ref_ord_sched_qty | apl_qty_condition2 |
+      | 2      | -10         | 80                 | 70                           | 40                | 50                        | 45                                  | -10.0 |
+
+  Scenario Outline: Calculate apl_qty for negative transaction quantities
+    Given the inventory transaction with ref_txn_qty "<ref_txn_qty>", 
+      cumulative_txn_qty "<cumulative_txn_qty>", 
+      cumulative_ref_ord_sched_qty "<cumulative_ref_ord_sched_qty>"
+    When the ref_txn_qty is less than 0
+    And cumulative_txn_qty is not equal to 0
+    And cumulative_ref_ord_sched_qty is greater than 0
+    Then set apl_qty to "<apl_qty_condition3>"
+    Examples:
+      | txn_id | ref_txn_qty | cumulative_txn_qty | cumulative_ref_ord_sched_qty | apl_qty_condition3 |
+      | 2      | -10         | 80                 | 70                           | -10.0 |
+
+  Scenario Outline: Default apl_qty calculation
+    Given the inventory transaction with ref_txn_qty "<ref_txn_qty>", 
+      cumulative_txn_qty "<cumulative_txn_qty>", 
+      cumulative_ref_ord_sched_qty "<cumulative_ref_ord_sched_qty>"
+    When none of the conditions for apl_qty are met
+    Then set apl_qty to "<apl_qty_default>"
+    Examples:
+      | txn_id | ref_txn_qty | cumulative_txn_qty | cumulative_ref_ord_sched_qty | apl_qty_default |
+      | 4      | 0           | 0                  | 0                            | NULL |
+
+  Scenario Outline: Error handling for missing data
+    Given an incomplete inventory transaction with missing field "<missing_field>"
+    When attempting to calculate apl_qty
+    Then the system should return an error message "Error: Missing required data for <missing_field>"
+    Examples:
+      | txn_id | missing_field              |
+      | 5      | ref_txn_qty                |
+      | 6      | cumulative_txn_qty         |
+      | 7      | cumulative_ref_ord_sched_qty |
+
