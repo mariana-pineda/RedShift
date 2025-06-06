@@ -1,0 +1,48 @@
+Feature: Mask last 4 digits of invoice numbers in the d_product_revenue_clone table
+
+  Background:
+    Given the d_product_revenue table exists
+    And the d_product_revenue_clone table does not exist
+    And the schema of d_product_revenue table includes the invoice_number column as STRING
+
+  Scenario: Create d_product_revenue_clone from d_product_revenue without errors
+    Given the d_product_revenue table exists
+    When I create a replica of d_product_revenue as d_product_revenue_clone
+    Then the d_product_revenue_clone table should be identical to d_product_revenue
+
+  Scenario Outline: Mask last 4 digits of invoice number
+    Given the d_product_revenue_clone table exists
+    And invoice numbers are <original_invoice>
+    When I mask the last 4 digits of invoice_number in d_product_revenue_clone
+    Then the invoice_number in d_product_revenue_clone should be <masked_invoice>
+
+    Examples:
+      | original_invoice | masked_invoice   |
+      | 1234567890       | 123456****       |
+      | 9876543210       | 987654****       |
+      | 5555555555       | 555555****       |
+
+  Scenario: Error when d_product_revenue_clone table does not exist
+    Given the d_product_revenue_clone table does not exist
+    When I attempt to mask the last 4 digits of invoice_number
+    Then an error message "Table d_product_revenue_clone does not exist" should be displayed
+
+  Scenario: Ensure correct masking format
+    Given the d_product_revenue_clone table exists
+    When I perform masking on invoice numbers with length less than 4 digits
+    Then the invoice_number should remain unchanged
+    And an error message "Invoice number must have at least 4 digits to mask" should be displayed
+
+  Scenario: Handling null invoice numbers
+    Given the d_product_revenue_clone table exists
+    And some invoice numbers are null
+    When I attempt to mask invoice numbers
+    Then null invoice_number should remain null
+    And an error message "Null invoice numbers cannot be masked" should be logged
+    
+  Scenario: Performance validation for large data volume
+    Given the d_product_revenue_clone table exists
+    And it contains large volume of data
+    When I perform the masking operation
+    Then the masking operation completes within acceptable time frame
+    And no performance degradation occurs
